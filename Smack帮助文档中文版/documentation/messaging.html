@@ -1,0 +1,92 @@
+<html>
+<head>
+	<title>Smack: 聊天 - Jive Software</title>
+	<link rel="stylesheet" type="text/css" href="style.css" />
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312"></head>
+
+<body>
+
+<div class="header">
+使用Chat 和 GroupChat发送消息</div>
+
+<div class="nav">
+&laquo; <a href="index.html">目录列表</a>
+</div>
+
+<p>
+往复地发送消息处于即时通讯的核心地位。两个类辅助发送和接收消息：
+<ul>
+	<li> <tt>org.jivesoftware.smack.Chat</tt> --用于在两个人之间发送消息。
+	<li> <tt>org.jivesoftware.smack.GroupChat</tt> --用于加入聊天室在多个人之间发送消息。
+</ul>
+
+Chat和 GroupCha类都是使用 <tt>org.jivesoftware.smack.packet.Message</tt> packet类来发送消息。在某种特定情况下，您可能不愿意使用高级的Chat和GroupChat类而直接发送和监听消息。
+<p class="subheader">
+Chat
+</p>
+
+一个chat在两个用户之间创建一个消息线程（通过线程ID）。下面这段代码演示了怎样和用户创建一个新的Chat并向他们发送一条文本消息：
+
+<div class="code"><pre>
+<font color="gray"><i>// 假设我们已经创建了一个名为"connection"的XMPPConnection。</i></font>
+Chat newChat = connection.createChat(<font color="green">"jsmith@jivesoftware.com"</font>);
+newChat.sendMessage(<font color="green">"Howdy!"</font>);
+</pre></div>
+<p><tt>Chat.sendMessage(String)方法可以方便地创建一个</tt>Message对象，用字符串参数设置消息正文，然后发送消息。在一定情况下您可能希望在发送消息前设置额外的值，使用<tt>Chat.createMessage()</tt>和 <tt>Chat.sendMessage(Message)</tt>方法，如下面代码片段所示：
+<p>
+
+<div class="code"><pre>
+<font color="gray"><i>// 假设我们已经创建了一个名为"connection"的XMPPConnection。</i></font>
+Chat newChat = connection.createChat(<font color="green">"jsmith@jivesoftware.com"</font>);
+Message newMessage = newChat.createMessage();
+newMessage.setBody(<font color="green">"Howdy!"</font>);
+message.setProperty(<font color="green">"favoriteColor"</font>, <font color="green">"red"</font>);
+newChat.sendMessage(newMessage);
+</pre></div>
+<p>
+
+Chat对象能够让您很容易监听其它聊天参与者的回复。
+下面这段代码演示的功能类似鹦鹉学舌--它将回复对方输入的一切消息。
+<p>
+
+<div class="code"><pre>
+<font color="gray"><i>// 假设我们已经创建了一个名为"connection"的XMPPConnection。</i></font>
+Chat newChat = connection.createChat(<font color="green">"jsmith@jivesoftware.com"</font>);
+newMessage.setBody(<font color="green">"Hi, I'm an annoying parrot-bot! Type something back to me."</font>);
+<b>while</b> (<b>true</b>) {
+    <font color="gray"><i>// 等待用户发送给我们的下一条消息。</i></font>
+    Message message = newChat.nextMessage();
+    <font color="gray"><i>// 将对方发送过来的消息原样发送给他。</i></font>
+    newChat.sendMessage(message.getBody());
+}
+</pre></div><p>
+
+以上这段代码使用了这个<tt>Chat.nextMessage()</tt> 方法得到下一条消息，它将等待不确定何时到来的另一条消息。当然也有其它的方法用于等待特定时间段到来的新消息，或者您可以添加一个监听器，它将在每次有消息到来时通知您。
+
+<p class="subheader">
+GroupChat
+</p>
+
+通过GroupChat连接到服务器上的聊天室，您可以在一群人中发送和接收消息。但在您发送或接收消息之前，您必须用一个昵称加入聊天室。下面这段代码演示了连接到一个聊天室并发送一条消息：
+<p>
+
+<div class="code"><pre>
+<font color="gray"><i>// 假设我们已经创建了一个名为"connection"的XMPPConnection。</i></font>
+GroupChat newGroupChat = connection.createGroupChat(<font color="green">"test@jivesoftware.com"</font>);
+<font color="gray"><i>// 用昵称"jsmith"加入这处群。</i></font>
+newGroupChat.join(<font color="green">"jsmith"</font>);
+<font color="gray"><i>// 向聊天室中的其它人发送一条消息。</i></font>
+newGroupChat.sendMessage(<font color="green">"Howdy!"</font>);
+</pre></div><p>
+
+通常，在群中发送和接收消息和在<tt>Chat</tt>类中非常相似。同时还提供了用于得到聊天室中其它人的列表的方法。
+<p>
+
+<br clear="all" /><br><br>
+
+<div class="footer">
+Copyright &copy; Jive Software 2002-2005
+</div>
+
+</body>
+</html>

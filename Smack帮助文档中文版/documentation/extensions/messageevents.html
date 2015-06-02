@@ -1,0 +1,218 @@
+<html>
+<head>
+    <title>消息事件</title>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+
+<body>
+
+<div class="header">消息事件</div><p>
+
+这个扩展用于请求和响应涉及发送，显示和编写消息的事件。在这个扩展中有三个阶段：<ol>
+    <li>请求事件通知，
+    <li>接收事件通知请求并且发送事件通知，和
+    <li>接收事件通知。</ol> 
+<p>跟随下面的链接获得更多信息：</p>
+<ul>
+  <li><a href="#reqevnot">请求事件通知</a></li>
+  <li><a href="#lstevnotreq">响应事件通知请求</a></li>
+  <li><a href="#lstevnot">响应事件通知</a></li>
+</ul>
+<b>JEP相关:</b> <a href="http://www.jabber.org/jeps/jep-0022.html">JEP-22</a>
+<hr>
+<div class="subheader"><a name="reqevnot">请求事件通知</a></div><p>
+<b>描述</b><p>
+
+为了接收特定消息的事件通知，你首先得指定您对哪些事件感兴趣。您发送的每个消息需要请求它自己的事件通知。因此，您发送的作为聊天一部分的每条消息应该请求它自己的事件通知。</p>
+
+<b>用法</b><p>
+
+类<i>MessageEventManager</i>为请求事件通知提供一种简便的方法。您所要做的就是指定请求事件通知的消息和您感兴趣的事件。<p>使用静态方法<i><b>MessageEventManager.addNotificationsRequests(Message message, boolean offline, boolean 
+delivered, boolean displayed, boolean composing)</b></i>请求事件通知。
+</p>
+
+<b>范例</b><p>
+从下面的范例中您会看到登陆用户到服务器，创建消息，为通知添加请求和发送消息。
+<blockquote>
+<pre>      <font color="#3f7f5f">// 连接到服务器并且登陆</font>
+      conn1 = new XMPPConnection(host);
+      conn1.login(server_user1, pass1);
+    
+      <font color="#3f7f5f">// 创建和用户2的聊天</font>
+      Chat chat1 = conn1.createChat(user2);
+    
+      <font color="#3f7f5f">// 创建要发送的消息</font>
+      Message msg = chat1.createMessage();
+      msg.setSubject(<font color="#0000FF">"Any subject you want"</font>);
+      msg.setBody(<font color="#0000FF">"An interesting body comes here..."</font>);
+      <font color="#3f7f5f">// 向消息中添加所有通知请求(offline, delivered, displayed,</font>
+      <font color="#3f7f5f">// composing)</font>
+      MessageEventManager.addNotificationsRequests(msg, <font COLOR="#7f0055"><b>true</b></font>, <font COLOR="#7f0055"><b>true</b></font>, <font COLOR="#7f0055"><b>true</b></font>, <font COLOR="#7f0055"><b>true</b></font>);
+    
+      <font color="#3f7f5f">// 发送包括通知请求的消息</font>
+      chat1.sendMessage(msg);
+</pre>
+</blockquote>
+
+<hr>
+
+<div class="subheader"><a name="lstevnotreq">响应事件通知请求</a></div><p>
+
+<b>描述</b><p>
+
+您可以接收如下事件的通知请求：delivered, displayed, composing and offline.您
+<b>必须</b> 监听这些请求并正确作出反应。</p>
+
+<b>用法</b><p>
+
+通常的想法是创建一个新的<i>DefaultMessageEventRequestListener</i>来监听事件通知请求并且有定制的逻辑作出响应。接着您得向在您想要的<i>XMPPConnection</i> 上运行的<i>MessageEventManager</i>添加监听器。注意<i>DefaultMessageEventRequestListener</i>是<i>MessageEventRequestListener</i>接口的默认实现。如果消息发送者要求当消息发送到时被通知，类<i>DefaultMessageEventRequestListener</i>自动给消息发送者发送一个已发送的通知。如果您决定创建一个新类实现<i>MessageEventRequestListener</i>接口，请记住发送已发送通知。</p>
+<ul>
+  <li>要创建一个新的<i>MessageEventManager</i>使用<i><b>MessageEventManager(XMPPConnection)</b></i> 构造方法。
+  </li>
+  <li>要创建事件通知请求监听器创建一个<i><b>DefaultMessageEventRequestListener</b></i>的子类或创建一个实现<i><b>MessageEventRequestListener</b></i> 接口的类。
+  </li>
+  <li>要向messageEventManager添加监听器使用MessageEventManager的消息
+<i><b>addMessageEventRequestListener(MessageEventRequestListener)</b></i>。</li>
+</ul></p>
+
+<b>范例</b><p>
+
+下面的范例中您会看到两个用户连接到服务器。一个用户创建一条消息，为通知添加请求和向另一个用户发送消息。另一个用户向<i>MessageEventManager</i>添加<i>DefaultMessageEventRequestListener</i>来监听并响应对方请求的事件通知。
+<blockquote>
+<pre>      <font color="#3f7f5f">// 连接到服务器并登陆</font>
+      conn1 = new XMPPConnection(host);
+      conn1.login(server_user1, pass1);
+      conn2 = new XMPPConnection(host);
+      conn2.login(server_user2, pass2);
+  
+      <font color="#3f7f5f">// 用户2创建一个MessageEventManager</font>
+      MessageEventManager messageEventManager = new MessageEventManager(conn2);
+      <font color="#3f7f5f">// 用户2添加监听器来响应事件通知请求</font>
+      messageEventManager.addMessageEventRequestListener(new DefaultMessageEventRequestListener() {
+          public void deliveredNotificationRequested(
+              String from,
+              String packetID,
+              MessageEventManager messageEventManager) {
+              super.deliveredNotificationRequested(from, packetID, messageEventManager);
+              <font color="#3f7f5f">// 当接收到这个请求时，DefaultMessageEventRequestListener自动响应消息已被发送</font>
+              System.out.println(<font color="#0000FF">"Delivered Notification Requested (" + from + ", " + packetID + ")"</font>);
+          }
+
+          public void displayedNotificationRequested(
+              String from,
+              String packetID,
+              MessageEventManager messageEventManager) {
+              super.displayedNotificationRequested(from, packetID, messageEventManager);
+              <font color="#3f7f5f">// 发送给消息发送者消息已被显示</font>
+              messageEventManager.sendDisplayedNotification(from, packetID);
+          }
+
+          public void composingNotificationRequested(
+              String from,
+              String packetID,
+              MessageEventManager messageEventManager) {
+              super.composingNotificationRequested(from, packetID, messageEventManager);
+              <font color="#3f7f5f">// 发送给消息发送者消息接收者正在编写回复</font>
+              messageEventManager.sendComposingNotification(from, packetID);
+          }
+
+          public void offlineNotificationRequested(
+              String from,
+              String packetID,
+              MessageEventManager messageEventManager) {
+              super.offlineNotificationRequested(from, packetID, messageEventManager);
+              <font color="#3f7f5f">// XMPP服务器注意这个请求。什么也不做。</font>
+              System.out.println(<font color="#0000FF">"Offline Notification Requested (" + from + ", " + packetID + ")"</font>);
+          }
+      });
+
+      <font color="#3f7f5f">// 用户1和用户2创建聊天</font>
+      Chat chat1 = conn1.createChat(user2);
+    
+      <font color="#3f7f5f">// 用户1创建要发送给用户2的消息</font>
+      Message msg = chat1.createMessage();
+      msg.setSubject(<font color="#0000FF">"Any subject you want"</font>);
+      msg.setBody(<font color="#0000FF">"An interesting body comes here..."</font>);
+      <font color="#3f7f5f">// 用户1向消息添加所有通知请求(offline, delivered, displayed,</font>
+      <font color="#3f7f5f">// composing)</font>
+      MessageEventManager.addNotificationsRequests(msg, <font COLOR="#7f0055"><b>true</b></font>, <font COLOR="#7f0055"><b>true</b></font>, <font COLOR="#7f0055"><b>true</b></font>, <font COLOR="#7f0055"><b>true</b></font>);
+    
+      <font color="#3f7f5f">// 用户1发送包含通知请求的消息</font>
+      chat1.sendMessage(msg);
+      Thread.sleep(500);
+      <font color="#3f7f5f">// 用户2发送给消息发送者消息接收者取消编写回复</font>
+      messageEventManager.sendCancelledNotification(user1, msg.getPacketID());
+</pre>
+</blockquote>
+
+<hr>
+
+<div class="subheader"><a name="lstevnot">响应事件通知</a></div><p>
+
+<b>描述</b><p>
+
+一旦您已经请求事件通知您将开始接收事件通知。您可以接收如下事件的通知： delivered, displayed, composing, offline and cancelled。您可能想响应某些或全部事件。</p>
+
+<b>用法</b><p>
+
+通常的想法是创建一个新的<i>DefaultMessageEventRequestListener</i>来监听事件通知请求并且有定制的逻辑作出响应。接着您得向在您想要的<i>XMPPConnection</i> 上运行的<i>MessageEventManager</i>添加监听器。
+<ul>
+  <li>要创建一个新的<i>MessageEventManager</i>使用<i><b>MessageEventManager(XMPPConnection)</b></i> 构造方法。
+  </li>
+  <li>要创建一个一路领先通知监听器创建一个类实现<i><b>MessageEventNotificationListener</b></i>接口。
+  </li>
+  <li>要向messageEventManager添加监听器使用MessageEventManager的消息
+<i><b>addMessageEventRequestListener(MessageEventRequestListener)</b></i>。</li>
+</ul></p>
+
+<b>范例</b><p>
+下面的范例中您会看到用户登陆到服务器，向<i>MessageEventManager</i>添加<i>MessageEventNotificationListener</i>来监听并响应事件通知，创建消息，添加通知的请求和发送消息。
+<blockquote>
+<pre>      <font color="#3f7f5f">// 连接到服务器并登陆</font>
+      conn1 = new XMPPConnection(host);
+      conn1.login(server_user1, pass1);
+  
+      <font color="#3f7f5f">// 创建MessageEventManager</font>
+      MessageEventManager messageEventManager = new MessageEventManager(conn1);
+      <font color="#3f7f5f">// 添加监听器响应事件通知</font>
+      messageEventManager.addMessageEventNotificationListener(new MessageEventNotificationListener() {
+          public void deliveredNotification(String from, String packetID) {
+              System.out.println(<font color="#0000FF">"The message has been delivered (" + from + ", " + packetID + ")"</font>);
+          }
+    
+          public void displayedNotification(String from, String packetID) {
+              System.out.println(<font color="#0000FF">"The message has been displayed (" + from + ", " + packetID + ")"</font>);
+          }
+    
+          public void composingNotification(String from, String packetID) {
+              System.out.println(<font color="#0000FF">"The message's receiver is composing a reply (" + from + ", " + packetID + ")"</font>);
+          }
+    
+          public void offlineNotification(String from, String packetID) {
+              System.out.println(<font color="#0000FF">"The message's receiver is offline (" + from + ", " + packetID + ")"</font>);
+          }
+    
+          public void cancelledNotification(String from, String packetID) {
+              System.out.println(<font color="#0000FF">"The message's receiver cancelled composing a reply (" + from + ", " + packetID + ")"</font>);
+          }
+      });
+
+      <font color="#3f7f5f">// 和用户2创建聊天</font>
+      Chat chat1 = conn1.createChat(user2);
+    
+      <font color="#3f7f5f">// 创建要发送的消息</font>
+      Message msg = chat1.createMessage();
+      msg.setSubject(<font color="#0000FF">"Any subject you want"</font>);
+      msg.setBody(<font color="#0000FF">"An interesting body comes here..."</font>);
+      <font color="#3f7f5f">// 向消息添加所有通知请求(offline, delivered, displayed,</font>
+      <font color="#3f7f5f">// composing)</font>
+      MessageEventManager.addNotificationsRequests(msg, <font COLOR="#7f0055"><b>true</b></font>, <font COLOR="#7f0055"><b>true</b></font>, <font COLOR="#7f0055"><b>true</b></font>, <font COLOR="#7f0055"><b>true</b></font>);
+    
+      <font color="#3f7f5f">// 发送包含通知请求的消息</font>
+      chat1.sendMessage(msg);
+</pre>
+</blockquote>
+
+</body>
+
+</html>

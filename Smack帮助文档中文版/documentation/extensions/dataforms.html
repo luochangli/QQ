@@ -1,0 +1,117 @@
+<html>
+<head>
+<title>数据表单</title>
+<link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+
+<body>
+
+<div class="header">数据表单</div><p> 
+
+允许使用Form在用户和应用程序之间交换结构化数据以完成日常任务如注册和搜索。Allows to exchange structured data between users and applications for common 
+tasks such as registration and searching using Forms. 
+
+<ul>
+  <li><a href="#gather">创建要填写的表单</a></li>
+  <li><a href="#fillout">答复表单</a></li>
+</ul>
+<b>JEP相关:</b> <a href="http://www.jabber.org/jeps/jep-0004.html">JEP-4</a>
+
+<hr>
+
+<div class="subheader"><a name="gather">创建要填写的表单</a></div><p>
+
+<b>描述</b><p>
+
+XMPP实体可能需要从另一个XMPP实体收集数据。因此，数据收集实体需要创建新的的表单，指定符合表单的字段，最后发送表单给数据提供实体。</p>
+
+<b>用法</b><p>
+要创建要填写的表单使用<i><b>Form</b></i>的构造方法并传递常量<b>Form.TYPE_FORM</b>作为参数。下一步是创建表单字段并把它们添加到表单。要创建和定制<i><b>FormField</b></i>使用<i><b>FormField</b></i>的构造方法并指定字段的变量名作为参数。接着使用<b>setType(String type)</b>来设置字段的类型（例如：FormField.TYPE_HIDDEN, FormField.TYPE_TEXT_SINGLE）。一旦我们有了<i><b>Form</b></i>实例和<i><b>FormFields</b></i>最后一步使用<b>addField(FormField field)</b>把我们想要的每个字段添加到表单。</p><p>
+
+要填写的表单完成后我们要在消息中发送它。执行表单的<b>getDataFormToSend()</b> 并添加答复作为扩展到要发送的消息。</p>
+
+<b>范例</b><p>
+
+在这个范例中我们可以看到如何创建并发送一个要填写的表单： <br>
+<blockquote>
+<pre>      <font color="#3f7f5f">// 创建一个新的表单来收集数据</font>
+        Form formToSend = new Form(Form.TYPE_FORM);
+        formToSend.setInstructions(
+            "Fill out this form to report your case.\nThe case will be created automatically.");
+        formToSend.setTitle("Case configurations");
+        <font color="#3f7f5f">// 向表单中添加一个隐藏变量</font>
+        FormField field = new FormField("hidden_var");
+        field.setType(FormField.TYPE_HIDDEN);
+        field.addValue("Some value for the hidden variable");
+        formToSend.addField(field);
+        <font color="#3f7f5f">// 向表单中添加一个固定变量</font>
+        field = new FormField();
+        field.addValue("Section 1: Case description");
+        formToSend.addField(field);
+        <font color="#3f7f5f">// 向表单添加一个单文本变量</font>
+        field = new FormField("name");
+        field.setLabel("Enter a name for the case");
+        field.setType(FormField.TYPE_TEXT_SINGLE);
+        formToSend.addField(field);
+        <font color="#3f7f5f">// 向表单中添加一个多文本变量</font>
+        field = new FormField("description");
+        field.setLabel("Enter a description");
+        field.setType(FormField.TYPE_TEXT_MULTI);
+        formToSend.addField(field);
+
+        <font color="#3f7f5f">// 创建和"user2@host.com"的聊天</font>
+        Chat chat = conn1.createChat("user2@host.com" );
+
+        Message msg = chat.createMessage();
+        msg.setBody("To enter a case please fill out this form and send it back to me");
+        <font color="#3f7f5f">// 向要发送的消息中添加要填写的表单</font>
+        msg.addExtension(formToSend.getDataFormToSend());
+
+        <font color="#3f7f5f">// 发送带有要填写的表单的消息</font>
+        chat.sendMessage(msg);
+</pre>
+</blockquote>
+
+<hr>
+
+<div class="subheader"><a name="fillout">答复表单</a></div><p>
+
+<b>描述</b><p>
+
+在许多情况下XMPP实体能够收到要填写的表单。例如，一些主机可能要求填写表单来注册新用户。Smack让数据提供实体以很简便的方法完成表单并把它发送回数据收集实体。</p>
+
+<b>用法</b><p>
+
+要填写的表单包含有用的信息能够用来回复表单。但实际上它不能被用于完成表单。相反，创建一个基于原始表单的新表单是必要的这是为了保存所有答复。</p><p>
+
+为了创建基于原始<i><b>Form</b></i>的新<i><b>Form</b></i>来完成填写执行原始<i><b>Form</b></i>的<b>createAnswerForm()</b>。一旦您有了有效能够完成的表单您所要做的就是在变量是您想要答复的<i><b>FormField</b></i>的变量并且值是答复的字符串形式处执行表单的<b>setAnswer(String variable, String value)</b>如果答复有几个值组成您可以使用<b>setAnswer(String variable, List values)</b>当这些值是一个字符串的List时。</p><p>
+
+表单完成后我们将要在消息中把它发送回去。执行表单的<b>getDataFormToSend()</b>并添加答复作为扩展到要发送的消息。</p>
+
+<b>范例</b><p>
+
+在这个范例中我们可以看到如何重新得到要填写的表单，完成表单并把它发送回去： <br>
+<blockquote>
+<pre>      <font color="#3f7f5f">// 获得带有要填写的表单的消息</font>
+        Message msg2 = chat2.nextMessage();
+        <font color="#3f7f5f">// 从消息中重新得到要填写的表单</font>
+        Form formToRespond = Form.getFormFrom(msg2);
+        <font color="#3f7f5f">// 获得表单来发送答复</font>
+        Form completedForm = formToRespond.createAnswerForm();
+        <font color="#3f7f5f">// 向表单中添加答复</font>
+        completedForm.setAnswer("name", "Credit card number invalid");
+        completedForm.setAnswer(
+            "description",
+            "The ATM says that my credit card number is invalid. What's going on?");
+			
+        msg2 = chat2.createMessage();
+        msg2.setBody("To enter a case please fill out this form and send it back to me");
+        <font color="#3f7f5f">// 向即将发送回的消息中添加完成的表单</font>
+        msg2.addExtension(completedForm.getDataFormToSend());
+        <font color="#3f7f5f">// 发送带有完成的表单的消息</font>
+        chat2.sendMessage(msg2);
+</pre>
+</blockquote>
+</body>
+
+</html>

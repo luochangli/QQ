@@ -1,0 +1,76 @@
+<html>
+<head>
+	<title>Smack: 处理收到的Packet - Jive Software</title>
+	<link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+
+<body>
+
+<div class="header">
+    处理收到的Packet
+</div>
+
+<div class="nav">
+&laquo; <a href="index.html">目录列表</a></div>
+
+<p>
+    Smack提供灵活的框架来通过两种构造处理收到的 packet：
+<ul>
+	<li><tt>org.jivesoftware.smack.PacketCollector</tt> —— 一个让您同步等待新packet的类。
+	<li><tt>org.jivesoftware.smack.PacketListener</tt>
+    —— 一个异步通知您引入的packet的接口。
+</ul>	packet监听器用于事件样式的编程，而packet收集器有一个可以做轮询和阻塞操作的packet的结果队列。 所以，当您想对一个有可能随时到来的packet采取一些操作时，使用packet监听器；而当您想等待一个特别的packet到来时，使用packet收集器。您可以使用XMPPConnection实例创建packet收集器和监听器。
+    <p>
+	
+<tt>org.jivesoftware.smack.filter.PacketFilter</tt> 接口决定哪个特别的将会被传递到<tt>PacketCollector</tt>或<tt>PacketListener。org.jivesoftware.smack.filter<span
+    style="font-family: Tahoma"> package</span>包中有许多预定义的过滤器。</tt><p>
+    下面的代码片段演示注册了一个packet收集器和一个packet 监听器：<p> 
+ 
+<div class="code"><pre>
+<font color="gray"><i>// 创建一个packet过滤器来监听来自一个特定用户的新的消息</i></font>
+<font color="gray"><i>//我们可以使用一个AndFilter来结合其它两个过滤器。 </i></font>
+PacketFilter filter = new AndFilter(new PacketTypeFilter(<b>Message.class</b>), 
+        new FromContainsFilter(<font color="green">"mary@jivesoftware.com"</font>));
+<font color="gray"><i>// 假设我们已经创建了一个名为"connection"的XMPPConnection。<span style="color: #000000">
+</span></i></font>
+<font color="gray"><i>// 首先，用我们创建的过滤器注册一个packet收集器。</i></font>
+PacketCollector myCollector = connection.createPacketCollector(filter);
+<font color="gray"><i>// 通常，您应该用收集器来些什么，像等待新的packet。</i></font>
+
+<font color="gray"><i>// 接下来，创建一个packet监听器。我们可以简便地使用匿名内部类。</i></font>
+PacketListener myListener = new PacketListener() {
+        <b>public</b> <b>void</b> processPacket(Packet packet) {
+            <font color="gray"><i>// 在这里用收到的packet做些什么。</i></font>
+        }
+    };
+<font color="gray"><i>// 注册这个监听器。</i></font>
+connection.addPacketListener(myListener, filter);
+</pre></div><p>
+
+<p class="subheader">
+    标准Packet过滤器。
+</p>
+    Smack包括丰富的packet 过滤器集，当然您可以通过实现<span style="font-family: Courier New">PacketFilter</span>接口创建自己的过滤器。
+    默认的过滤器集包括：
+<ul>
+	<li> <tt>PacketTypeFilter</tt> ——特定类的packet过滤器。
+	<li> <tt>PacketIDFilter</tt> ——含有特定packet ID的packet过滤器。
+	<li> <tt>ThreadFilter</tt> ——含有特定线程ID的消息packet过滤器。
+	<li> <tt>ToContainsFilter</tt> ——发送到特定地址的packet过滤器。
+	<li> <tt>FromContainsFilter</tt> ——来自特定地址的packet过滤器。
+	<li> <tt>PacketExtensionFilter</tt> ——含有特定packet扩充的packet过滤器 filters for s that have a particular&nbsp; extension.
+	<li> <tt>AndFilter</tt> ——实现两个过滤器的逻辑“与”操作。
+	<li> <tt>OrFilter</tt> —— 实现两个过滤器的逻辑“或”操作。
+	<li> <tt>NotFilter</tt>
+    ——实现一个过滤器的逻辑“非”操作。
+</ul>
+
+
+
+<br clear="all" /><br><br>
+<div class="footer">
+Copyright &copy; Jive Software 2002-2005
+</div>
+
+</body>
+</html>

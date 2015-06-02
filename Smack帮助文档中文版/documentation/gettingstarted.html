@@ -1,0 +1,75 @@
+<html>
+<head>
+	<title>开始学习Smack- Jive Software</title>
+	<link rel="stylesheet" type="text/css" href="style.css" /
+</head>
+
+<body>
+
+<div class="header">
+开始学习Smack
+</div>
+
+<div class="nav">
+&laquo; <a href="index.html">目录列表</a>
+</div>
+
+<p>
+这个文档将会向您介绍Smack API，并且简要介绍一些重要的类和概念。</p>
+
+<p class="subheader">必要条件</p>
+
+Smack的唯一必要条件是JDK 1.2 或更高版本<sup><a style="text-decoration:none;" href="#ssenote">1</a></sup>。smack.jar文件已包含一个XML解析器，不需要其它第三方类库。 
+<p>
+
+<sup>1</sup> <font size="-1"><i>JDK 1.2 and 1.3 用户如果想使用SSL连接则classpath在中必须存在<a href="http://java.sun.com/products/jsse/index-103.html">JSSE</a>类库。</i></font>
+<p class="subheader">
+建立连接</p>
+
+<tt>XMPPConnection</tt>类用来建立到XMPP服务器的连接。要建立SSL连接，要使用SSLXMPPConnection类。下面是建立连接的例子：
+<p>
+
+<div class="code">
+<pre>
+<font color="gray"><i>// 建立一个到jabber.org服务器的连接。</i></font>
+XMPPConnection conn1 = <font color="navy"><b>new</b></font> XMPPConnection(<font color="green">"jabber.org"</font>);
+
+<font color="gray"><i>// 通过一个特殊的端口建立一个到jabber.org服务器的连接。</i></font>
+XMPPConnection conn2 = <font color="navy"><b>new</b></font> XMPPConnection(<font color="green">"jabber.org"</font>, 5222);
+
+<font color="gray"><i>// 建立一个到jabber.org服务器的SSL连接。</i></font>
+XMPPConnection connection = <font color="navy"><b>new</b></font> SSLXMPPConnection(<font color="green">"jabber.org"</font>); 
+</pre></div>
+
+<p>一旦您建立了一个连接，您必须通过方法<tt>XMPPConnection.login(String username, String password)使用用户名和密码登陆。</tt>如果登陆成功，您可以通过创建新的<tt>Chat或</tt><tt>GroupChat</tt>对象和其它用户聊天。
+<p class="subheader">
+操作Roster
+</p>
+Roster能够让您跟踪其它用户的有效性（存在）。您可以通过使用像“朋友”和“同事”这样的组来组织用户，这样您可以发现每个用户是否在线。 
+<p> 
+
+使用<tt>XMPPConnection.getRoster()</tt>这个方法得到Roster。通过Roster类您可以找到所有Roster登陆、他们所属的组以及每个登陆当前的存在状态。
+<p class="subheader">
+读写Packet
+</p>
+
+从客户端以XML格式发送到XMPP服务器的每个消息被称为一个“packet”。<tt>org.jivesoftware.smack.packet</tt>包中包含了一些类，这些类封装了XMPP所允许的三个不同的基本packet类型(message, presence, 和 IQ)。 像Chat和GroupChat这样的类提供了更高类别的构造能够自动地创建和发送packet，但是您也可以直接创建和发送packet。 下面是一个通过改变您的presence来让别人知道您已无效，已经"out fishing"了:
+<p>
+
+<div class="code">
+<pre>
+<font color="gray"><i>// 创建一个新的presence. 传入false以指示我们已经无效了</i></font>
+Presence presence = new Presence(Presence.Type.UNAVAILABLE);
+presence.setStatus(<font color="green">"Gone fishing"</font>);
+<font color="gray"><i>// 发送packet (假设已经有了一个名为"con"的XMPPConnection实例).</i></font>
+con.sendPacket(presence);
+</pre></div>
+<p>
+
+Smack提供两种方法读取收到的packet：<tt>PacketListener[packet监听器]</tt>和<tt>PacketCollector</tt>[packet收集器]。 二者都是使用<tt>PacketFilter</tt>实例来决定哪个packet应该被处理。packet监听器用于事件样式的编程，而packet收集器有一个可以做轮询和阻塞操作的packet的结果队列。所以，当您想对一个有可能随时到来的packet采取一些操作时，使用packet监听器；而当您想等待一个特别的packet到来时，使用packet收集器。您可以使用XMPPConnection实例创建packet收集器和监听器。
+<p><div class="footer">
+Copyright &copy; Jive Software 2002-2005
+</div>
+
+</body>
+</html>

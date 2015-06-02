@@ -1,0 +1,189 @@
+<html>
+<head>
+<title>服务查看</title>
+<link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+
+<body>
+
+<div class="header">服务查看</div><p>
+
+服务查看扩展允许查看XMPP实体的项目和信息。跟随下面的链接来学习如何使用此扩展。
+
+<ul>
+  <li><a href="#discoregister">管理XMPP实体要素</a></li>
+  <li><a href="#disconodeinfo">提供节点信息</a></li>
+  <li><a href="#discoitems">查看XMPP相关项目</a></li>
+  <li><a href="#discoinfo">查看XMPP实体信息</a></li>
+  <li><a href="#discopublish">发布公共可用项目</a></li>
+</ul>
+<b>JEP相关:</b> <a href="http://www.jabber.org/jeps/jep-0030.html">JEP-30</a>
+
+<hr>
+
+<div class="subheader"><a name="discoregister">管理XMPP实体要素</a></div><p>
+
+<b>描述</b><p>
+
+任何XMPP实体可能接收查看请求并且必须使用与之相关的项目或信息响应。因此，您的Smack客房端可能接收查看请求且必须响应（也就是，如果您的客房端支持XHTML-IM）.这个扩展自动使用您事先配置好的信息响应查看请求。</p>
+
+<b>用法</b><p>
+要配置您的客房端支持的要素您应该首先获得和您的XMPPConnection关连的ServiceDiscoveryManager要得到ServiceDiscoveryManager调用<i><b>ServiceDiscoveryManager</b></i>类的<b>getInstanceFor(connection)</b>方法，在这里connection是您的XMPPConnection。<br></p>
+
+<p>一旦您有了ServiceDiscoveryManager您就能管理支持的要素。要注册一个新的要素调用<i><b>ServiceDiscoveryManager</b></i>的<b>addFeature(feature)</b>方法，在这里feature是代表支持的要素的字符串。要删除支持的要素调用<i><b>ServiceDiscoveryManager</b></i>的<b>removeFeature(feature)</b>方法，在这里feature是代表要删除的要素的字符串。</p>
+
+<b>范例</b><p>
+
+ 在这个例子中我们可以看到如何添加和删除支持的要素：<br>
+<blockquote>
+<pre>      <font color="#3f7f5f">// 获得XMPPConnection与关连的ServiceDiscoveryManager</font>
+      ServiceDiscoveryManager discoManager = ServiceDiscoveryManager.getInstanceFor(connection);
+      
+      <font color="#3f7f5f">// 注册这个XMPP实体支持的新要素</font>
+      discoManager.addFeature(namespace1);
+
+      <font color="#3f7f5f">// 从此XMPP实体支持的要素中删除指定的要素</font>
+      discoManager.removeFeature(namespace2);
+</pre>
+</blockquote>
+
+<hr>
+
+<div class="subheader"><a name="disconodeinfo">提供节点信息</a></div><p>
+
+<b>描述</b><p>
+
+您的XMPP实体可能收到用无法确定的地址作为JID来的查看请求,如来自您加入的MUC聊天室.要回复正确信息,配置Smack客户端与项目/节点相关联的信息提供器是在必要的.</p>
+
+<b>用法</b><p>
+要配置Smack客户端中关联的节点您需要创建NodeInformationProvider并且把它注册到<i><b>ServiceDiscoveryManager</b></i>.要得到ServiceDiscoveryManager调用<i><b>ServiceDiscoveryManager</b></i>类的<b>getInstanceFor(connection)</b>方法,在这里connection是您的XMPPConnection。<br></p>
+
+<p>一旦您有了ServiceDiscoveryManager您就可能为XMPP实体的节点注册信息提供器。要注册新的的信息提供器<i><b>ServiceDiscoveryManager</b></i>的<b>setNodeInformationProvider(String node, NodeInformationProvider listener)</b>方法，在这里node是作为JID的未设置地址的项目listener是要注册的<i><b>NodeInformationProvider</b></i>。要解除注册<i><b>NodeInformationProvider</b></i>调用<i><b>ServiceDiscoveryManager</b></i>的<b>removeNodeInformationProvider(String node)</b>方法，在这里node是作为JID的未设置地址的项目即我们想解除它的信息提供器。</p>
+
+<b>范例</b><p>
+
+在这个例子中我们可以看到如何注册使用ServiceDiscoveryManager注册NodeInformationProvider，它将提供关于名为"http://jabber.org/protocol/muc#rooms"的节点：<br>
+<blockquote>
+<pre>      <font color="#3f7f5f">// 设置NodeInformationProvider，它将在disco请求收到时</font>
+      <font color="#3f7f5f">// 提供加入的聊天室的信息 </font>
+      ServiceDiscoveryManager.getInstanceFor(connection).setNodeInformationProvider(
+          <font color="#0000FF">"http://jabber.org/protocol/muc#rooms"</font>,
+          new NodeInformationProvider() {
+              public Iterator getNodeItems() {
+                  ArrayList answer = new ArrayList();
+                  Iterator rooms = MultiUserChat.getJoinedRooms(connection);
+                  while (rooms.hasNext()) {
+                      answer.add(new DiscoverItems.Item((String)rooms.next()));
+                  }
+                  return answer.iterator(); 
+              }
+          });
+</pre>
+</blockquote>
+
+<hr>
+
+<div class="subheader"><a name="discoitems">查看XMPP相关项目</a></div><p>
+
+<b>描述</b><p>
+
+要获得一个特定项目的信息,您必须首先查看XMPP实体中有效项目。</p>
+
+<b>用法</b><p>
+
+<p>一旦您拥有ServiceDiscoveryManager您就能查看与XMPP相关项目。要查看指定XMPP实体的项目调用<i><b>ServiceDiscoveryManager</b></i>的<b>discoverItems(entityID)</b>方法，在这里entityID是实体的ID。方法<b>discoverItems(entityID)</b>将会返回包含查看的项目的<i><b>DiscoverItems</b></i>实例。</p>
+
+<b>范例</b><p>
+
+在这个例子中我们可以看到如何查看与在线目录服务相关的项目: <br>
+<blockquote>
+<pre>      <font color="#3f7f5f">// 获得与XMPPConnection相关的ServiceDiscoveryManager</font>
+      ServiceDiscoveryManager discoManager = ServiceDiscoveryManager.getInstanceFor(connection);
+      
+      <font color="#3f7f5f">// 获得指定XMPP实体的项目</font>
+      <font color="#3f7f5f">// 这个例子获得与在线目录服务相关的项目</font>
+      DiscoverItems discoItems = discoManager.discoverItems("plays.shakespeare.lit");
+
+      <font color="#3f7f5f">// 获得被查询的XMPP实体的要查看的项目</font>
+      Iterator it = discoItems.getItems();
+      <font color="#3f7f5f">// 显示远端XMPP实体的项目</font>
+      while (it.hasNext()) {
+          DiscoverItems.Item item = (DiscoverItems.Item) it.next();
+          System.out.println(item.getEntityID());
+          System.out.println(item.getNode());
+          System.out.println(item.getName());
+      }
+</pre>
+</blockquote>
+
+<hr>
+
+<div class="subheader"><a name="discoinfo">查看XMPP实体信息</a></div><p>
+
+<b>描述</b><p>
+一旦您拥有被查看的实体ID和项目的名称,您可能想要查找更多关于此项目的信息.您期望的信息通常有两种:1)项目身份2)项目特征。</p>
+
+<p>这个信息帮助您决定关于这个项目的哪些动作是可能的（注册，搜索，加入，等等。）和兴趣特定特征类型。</p>
+
+<b>用法</b><p>
+
+<p>一旦您拥有ServiceDiscoveryManager您就能查看XMPP实体信息。要查看特定XMPP实体信息调用<i><b>ServiceDiscoveryManager</b></i>的<b>discoverInfo(entityID)</b>方法，在这里entityID是实体的ID。<b>discoverInfo(entityID)</b>方法会返回一个包含被查看的信息的<i><b>DiscoverInfo</b></i>的实例。</p>
+
+<b>Examples</b><p>
+在这个例子中我们可能看到如何查看一个会议室的信息：<br>
+<blockquote>
+<pre>      <font color="#3f7f5f">// 获得XMPPConnection相关的ServiceDiscoveryManager</font>
+      ServiceDiscoveryManager discoManager = ServiceDiscoveryManager.getInstanceFor(connection);
+      
+      <font color="#3f7f5f">// 获得特定XMPP实体的信息</font>
+      <font color="#3f7f5f">//这个例子获得一个会议室的信息</font>
+      DiscoverInfo discoInfo = discoManager.discoverInfo("balconyscene@plays.shakespeare.lit");
+
+      <font color="#3f7f5f">// 获得远端XMPP实体被查看的身份</font>
+      Iterator it = discoInfo.getIdentities();
+      <font color="#3f7f5f">// 显示远端XMPP实体的身份</font>
+      while (it.hasNext()) {
+          DiscoverInfo.Identity identity = (DiscoverInfo.Identity) it.next();
+          System.out.println(identity.getName());
+          System.out.println(identity.getType());
+          System.out.println(identity.getCategory());
+      }
+
+      <font color="#3f7f5f">// 检查这个room是否有密码保护</font>
+      discoInfo.containsFeature("muc_passwordprotected");
+</pre>
+</blockquote>
+
+<hr>
+
+<div class="subheader"><a name="discopublish">发布公共可用项目</a></div><p>
+
+<b>描述</b><p>
+发布您的实体项目为某种持久性存储.这能够使其它实体通过使用disco#items命名空间查询那个实体并收到一个结果即使被查询的实体不在线（或不可用）。</p>
+
+<b>用法</b><p>
+
+<p>一旦您好拥有ServiceDiscoveryManager您就能发布项目为某种持久性存储。要发布一个特定XMPP实体的项目您需要首先创建一个<i><b>DiscoverItems</b></i>实例并且使用要发布的项目配置它。然后您需要调用<i><b>ServiceDiscoveryManager</b></i>的<b>publishItems(String entityID, DiscoverItems discoverItems)</b>方法，在这里entityID是XMPP实体的地址它将持有项目，discoverItems包含要发布的项目。</p>
+
+<b>范例</b><p>
+
+在这个例子中我们可以看到如何发布新项目：<br>
+<blockquote>
+<pre>      <font color="#3f7f5f">// 获得XMPPConnection相关的ServiceDiscoveryManager</font>
+      ServiceDiscoveryManager discoManager = ServiceDiscoveryManager.getInstanceFor(connection);
+      
+      <font color="#3f7f5f">// 创建一个包含要发布项目的DiscoverItems</font>
+      DiscoverItems itemsToPublish = new DiscoverItems();
+      DiscoverItems.Item itemToPublish = new DiscoverItems.Item("pubsub.shakespeare.lit");
+      itemToPublish.setName("Avatar");
+      itemToPublish.setNode("romeo/avatar");
+      itemToPublish.setAction(DiscoverItems.Item.UPDATE_ACTION);
+      itemsToPublish.addItem(itemToPublish);
+
+      <font color="#3f7f5f">// 通过发送它们到服务器发布新项目</font>
+      discoManager.publishItems("host", itemsToPublish);
+</pre>
+</blockquote>
+</body>
+
+</html>

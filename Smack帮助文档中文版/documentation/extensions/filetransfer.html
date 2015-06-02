@@ -1,0 +1,152 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html>
+<head>
+<title>文件传输</title>
+<link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+
+<body>
+
+<div class="header">文件传输</div><p>
+
+文件传输扩展允许用户传送和接收文件。
+<ul>
+  <li><a href="#sendfile">向其它用户发送文件</a></li>
+  <li><a href="#recievefile">接收来自其它用户的文件</a></li>
+  <li><a href="#monitorprogress">监视文件传输过程</a></li>
+</ul>
+<b>JEP相关:</b> <a href="http://www.jabber.org/jeps/jep-0095.html">JEP-95</a>
+<a href="http://www.jabber.org/jeps/jep-0096.html">JEP-96</a>
+<a href="http://www.jabber.org/jeps/jep-0065.html">JEP-65</a>
+<a href="http://www.jabber.org/jeps/jep-0047.html">JEP-47</a>
+<hr>
+
+<div class="subheader"><a name="sendfile">向其它用户发送文件</a></div><p>
+
+<b>描述</b><p>
+用户可能希望向其它用户发送文件。其它有接受，拒绝，或忽略用户的请求。Smack为用户轻松发送文件提供了一个简单的接口。
+</p>
+<b>用法</b><p>
+
+
+要接收文件您首先必须创建<b><i>FileTransferManager</i></b>类的一个实例。这个类有一个带有你的XMPPConnection作为参数的构造方法。 要创建管理器实例您应该使用<i>new FileTransferManager(connection)</i>
+
+<p>
+一旦你拥有<b><i>FileTransferManager</i></b>您需要创建一个输出的文件传输来发送文件。使用<b><i>FileTransferManager</i></b>中的<b>createOutgoingFileTransfer(userID)</b>方法。您提供给这个方法的userID是您要发送文件的用户的有完全的jabber ID。一个完全的jabber ID包括节点（node），域（domain）和资源（resource），用户必须连接到该资源以能够接收文件传输。 
+
+<p>
+既然您有<b><i>OutgoingFileTransfer</i></b>实例您就想要发送文件了。发送文件的方法是 <b>sendFile(file, description)</b>。您提供给此方法的文件应该是在本地文件系统上的可读文件并且描述应该是该文件的简短描述以帮助用户决定是否要接收此文件。
+ 
+<p>要了解监视文件传输的过程，参看此文档的 <a href="#monitorprogress">监视文件传输过程</a> 部分。
+
+<p>其它发送文件的方法也由<b><i>OutgoingFileTransfer</i></b>作为其一部分提供。请参考Javadoc以获得更多信息。
+ 
+
+</p><b>范例</b><p>
+
+在这个例子中我们可以看到如何发送文件: <br>
+<blockquote>
+<pre>
+      <font color="#3f7f5f">// 创建文件传输管理器</font>
+      FileTransferManager manager = new FileTransferManager(connection);
+		
+      <font color="#3f7f5f">// 创建输出的文件传输</font>
+      OutgoingFileTransfer transfer = manager.createOutgoingFileTransfer(<font color="#0000FF">"romeo@montague.net"</font>);
+		
+      <font color="#3f7f5f">// 发送文件</font>
+      transfer.sendFile(new File(<font color="#0000FF">"shakespeare_complete_works.txt"</font>), <font color="#0000FF">"You won't believe this!"</font>);
+
+</pre>
+</blockquote>
+
+<hr>
+
+<div class="subheader"><a name="recievefile">接收来自其它用户的文件</a></div><p>
+
+<b>描述</b><p>
+
+用户可能希望接收来自其它用户的文件.接收文件的过程是事件驱动机制的,新文件传输请求通过文件传输管理器注册的监听器从其它用户接收。</p>
+
+<b>用法</b><p>
+
+
+<p>要接收文件您必须首先创建一个<b><i>FileTransferManager</i></b>类的实例。这个类有一个带有你的XMPPConnection作为参数的构造方法。 要创建管理器实例您应该使用<i>new FileTransferManager(connection)</i>
+
+<p>
+一旦您拥有<b><i>FileTransferManager</i></b>您需要用它注册一个监听器。FileTransferListner接口有一个方法，<b>fileTransferRequest(request)</b>。当请求通过这个方法接收，您可以接受或拒绝请求。<b><i>FileTransferRequest</i></b>类的一些方法返回的关于传输请求的信息可以帮助您作出决定。
+
+
+<p>
+要接受文件传输，调用<b>accept()</b>，这个方法将会创建一个<b><i>IncomingFileTransfer</i></b>。在您有了文件传输之后您可能通过调用<b>recieveFile(file)</b>方法传输这个文件。这个方法得到的文件将会被保存在此文件传输的数据所保存的地方。</p>
+
+<p>
+最后，要拒绝文件传输您需要调用的唯一的方法是<b><i>IncomingFileTransfer</i></b>中的<b>reject()</b>。
+
+<p>
+要了解监视文件传输的过程，参看此文档的 <a href="#monitorprogress">监视文件传输过程</a> 部分。
+
+<p>
+其它接收文件的方法也由 <b><i>IncomingFileTransfer</i></b>作为其一部分提供。请参考Javadoc以获得更多信息。
+
+</p><b>范例</b><p>
+
+在这个例子中我们可以看到如何批准或拒绝文件传输请求: <br>
+<blockquote>
+<pre>      <font color="#3f7f5f">// 创建文件传输管理器</font>
+      final FileTransferManager manager = new FileTransferManager(connection);
+
+      <font color="#3f7f5f">// 创建监听器</font>
+      manager.addFileTransferListener(new FileTransferListener() {
+            public void fileTransferRequest(FileTransferRequest request) {
+                  <font color="#3f7f5f">// 监查此请求是否应该被接受</font>
+                  if(shouldAccept(request)) {
+                        <font color="#3f7f5f">// 接受</font>
+                        IncomingFileTransfer transfer = request.accept();
+                        transfer.recieveFile(new File(<font color="#0000FF">"shakespeare_complete_works.txt"</font>));
+                  } else {
+                        <font color="#3f7f5f">// 拒绝</font>
+                        request.reject();
+                  }
+            }
+      });
+</pre>
+</blockquote>
+
+<hr>
+
+<div class="subheader"><a name="monitorprogress">监视文件传输过程</a></div><p>
+
+<b>描述</b><p>
+
+当文件在传输中，您可能希望监视其过程。</p>
+
+<b>用法</b><p>
+
+<p><b><i>IncomingFileTransfer</i></b>和<b><i>OutgoingFileTransfer</i></b>都继承了<b><i>FileTransfer</i></b>类，此类提供一些方法监视文件传输的进展：
+<ul>
+<li><b>getStatus()</b> - 文件传输可以有多种状态，协商，拒绝，取消，传输过程中，错误和完成。这个方法会文件传输的当前状态。
+
+<li><b>getProgress()</b> - 如果文件在传输过程中，这个方法会返回一个0到1的数字，0表示传输还没开始，1表示传输完成。如果没在传输过程中也可能返回-1。
+<li><b>isDone()</b> - 和getProgress()方法类似，不同的是它返回<i>boolean</i>。如果状态为拒绝，取消，错误或完成返回真，否则返回假。
+<li><b>getError()</b> - 如果在传输过程中发生错误，这个方法将会返回所发生的错误的类型。
+</ul>
+
+<b>范例</b><p>
+
+在这个例子中我们可以看到如何监视文件传输: <br>
+<blockquote>
+<pre>      while(!transfer.isDone()) {
+            if(transfer.getStatus().equals(Status.ERROR)) {
+                  System.out.println(<font color="#0000FF">"ERROR!!! "</font> + transfer.getError());
+            } else {
+                  System.out.println(transfer.getStatus());
+                  System.out.println(transfer.getProgress());
+            }
+            sleep(1000);
+      }
+</pre>
+</blockquote>
+</body>
+
+</html>

@@ -1,0 +1,167 @@
+<html>
+<head>
+<title>XHTML支持</title>
+<link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+
+<body>
+
+<div class="header">XHTML消息</div><p>
+
+通过使用XHTML提供发送和接受格式化消息的能力.
+
+<p>跟随下面的链接学习如何编写,发送,接收和发现是否支持XHTML消息:</p>
+<ul>
+  <li><a href="#xhtmlcompose">编写HTML消息</a></li>
+  <li><a href="#xhtmlsend">发送XHTML消息</a></li>
+  <li><a href="#xhtmlreceive">接收XHTML消息</a></li>
+  <li><a href="#xhtmldiscover">查看对XHTML消息的支持</a></li>
+</ul>
+<b>JEP相关:</b> <a href="http://www.jabber.org/jeps/jep-0071.html">JEP-71</a>
+
+<hr>
+
+<div class="subheader"><a name="xhtmlcompose">编写HTML消息</a></div><p>
+
+<b>描述</b><p>
+
+发送XHTML消息的第一步是编写它.Smack提供一个专门的类来帮助构建正确的XHTML消息而隐藏低层的复杂细节.在特殊情况下,高级用户可能不使用这个帮助类而自己创建XHTML.即使对于这些情况Smack提供了一个很好的已定义的入口点来向特定消息中添加创建好的XHTML内容.</p>
+
+<p>
+注意: 并不是所有客户能够浏览XHTML格式的消息。因此，推荐您包含一个常规消息体,它既然可以是文本的非格式化版也可以是XHTML支持被要求查看消息内容的注解。</p> 
+
+<b>用法</b><p>
+
+
+创建<i><b>XHTMLText</b></i>的一个实例并指定消息体的样式和语言。您可以向消息中添加一些XHTML体但是每个XHTML体应该对应一种不同语言。一旦您有XHTMLText之后你就可以开始添加标签和文本。要添加标签这里有一些可用的方法。对于每个XHTML已定义标签都有您可以调用的方法。要发送文本您可以调用方法<b>#append(String textToAppend)</b>。</p>
+
+<p>在您配置完XHTML文本之后，您要做的最后一步是将XHTML文本添加到您要发送的消息中。如果您决定要自己创建XHTML文本，您也要按照下面的步骤。要将XHTML文本添加到消息中调用 <i><b>XHTMLManager</b></i>类中的<b>#addBody(Message message, String body)</b>方法，在这里<i>message</i>是接收XHTML体的消息而 <i>body</i>是要作为XHTML体添加到消息中的字符串。</p>
+
+<b>范例</b><p>
+
+在这个范例中我们可以看出如何编写如下XHTML消息：<br>
+<font color="#0000FF">&lt;body&gt;&lt;p style='font-size:large'&gt;Hey John, this is my new &lt;span
+ style='color:green'&gt;green&lt;/span&gt;&lt;em&gt;!!!!&lt;/em&gt;&lt;/p&gt;&lt;/body&gt;</font>
+<blockquote>
+<pre>      <font color="#3f7f5f">// 创建要发送的消息</font>
+      Message msg = chat.createMessage();
+      msg.setSubject(<font color="#0000FF">"Any subject you want"</font>);
+      msg.setBody(<font color="#0000FF">"Hey John, this is my new green!!!!"</font>);
+
+      <font color="#3f7f5f">// 创建要和消息一起发送的XHTMLText</font>
+      XHTMLText xhtmlText = new XHTMLText(null, null);
+      xhtmlText.appendOpenParagraphTag(<font color="#0000FF">"font-size:large"</font>);
+      xhtmlText.append(<font color="#0000FF">"Hey John, this is my new "</font>);
+      xhtmlText.appendOpenSpanTag(<font color="#0000FF">"color:green"</font>);
+      xhtmlText.append(<font color="#0000FF">"green"</font>);
+      xhtmlText.appendCloseSpanTag();
+      xhtmlText.appendOpenEmTag();
+      xhtmlText.append(<font color="#0000FF">"!!!!"</font>);
+      xhtmlText.appendCloseEmTag();
+      xhtmlText.appendCloseParagraphTag();
+      
+      <font color="#3f7f5f">// 将XHTML文本添加到消息中</font>
+      XHTMLManager.addBody(msg, xhtmlText.toString());
+
+</pre>
+</blockquote>
+
+<hr>
+
+<div class="subheader"><a name="xhtmlsend">发送XHTML消息</a></div><p>
+
+<b>描述</b><p>
+
+
+当您编写完XHTML消息之后您会想发送它.一旦您已经将XHTML内容添加到您要发送的消息中时您几乎已经完成了.最后一步是您像发送其它消息那样发送它</p>
+
+<b>用法</b><p>
+
+XHTML消息和任何规则消息一样,因此要发送消息您可以按照通常的步骤.例如,使用i><b>Chat</b></i>的<b>#send(Message)</b>方法，或者您可以使用<i><b>XMPPConnection</b></i>的<b>#send(Packet)</b>方法</p>
+
+<b>范例</b><p>
+
+在这个例子中我们可以看到如何发送带有XHTML内容的消息。 
+<blockquote>
+<pre>      <font color="#3f7f5f">// 创建要发送的消息</font>
+      Message msg = chat.createMessage();
+      <font color="#3f7f5f">//从其它地方获得要发送的XHTML文本。</font>
+      String xhtmlBody = getXHTMLTextToSend();
+
+      <font color="#3f7f5f">// 将XHTML文本添加到消息中</font>
+      XHTMLManager.addBody(msg, xhtmlBody);
+
+      <font color="#3f7f5f">// 发送包含XHTML的消息</font>
+      chat.sendMessage(msg);
+</pre>
+</blockquote>
+
+<hr>
+
+<div class="subheader"><a name="xhtmlreceive">接收XHTML消息</a></div><p>
+
+<b>描述</b><p>
+从一个收接收的消息中获得XHTML也是可能的。记住规范定义中说明一条消息可能包含许多XHTML体而每个XHTML体应该对应于一种不同语言。</p>
+
+<b>用户</b><p>
+要获得特定消息的XHTML体只要调用<i><b>XHTMLManager</b></i>类的<b>#getBodies(Message)</b>方法.返回值是包含不同XHTML体的<i><b>Iterator</b></i>，如果没有返回null。</p>
+
+<b>范例</b><p>
+
+ 在这个例子中我们可以看到如何创建PacketListener以获得任何接收的消息的XHTML体。
+<blockquote>
+<pre>      <font color="#3f7f5f">// 创建当前聊天的监听器并显示XHTML内容</font>
+      PacketListener packetListener = new PacketListener() {
+          public void processPacket(Packet packet) {
+              Message message = (Message) packet;
+              <font color="#3f7f5f">// 获得消息的XHTML体</font>
+              Iterator it = XHTMLManager.getBodies(message);
+              if (it != null) {
+                 <font color="#3f7f5f">// 在控制台显示XHTML体</font>
+                 while (it.hasNext()) {
+	             String body = (String) it.next();
+	             System.out.println(body);
+	         }
+	      }
+            };
+      chat.addMessageListener(packetListener);
+
+</pre>
+</blockquote>
+
+<hr>
+
+<div class="subheader"><a name="xhtmldiscover">查看对XHTML消息的支持</a></div><p>
+
+<b>描述</b><p>
+
+在您开始向一个用户发送XHTML消息之前您应该查看用户是否支持XHTML消息。有两种方法查看，明确的和暗地的。明确的是指在您发送任何XHTML消息之前您首先尝试查看用户是否支持XHTML。暗地的是指您没首先查看对方是否支持XHTML而发送了XHTML消息通过对方的回复（正常消息还是XHTML消息）来发现用户是否支持XHTML。这部分解释如何明确地查看XHTML支持。</p>
+
+<b>用法</b><p>
+
+要查看远端用户是否支持XHTML消息调用<i><b>XHTMLManager</b></i>类的<b>#isServiceEnabled(XMPPConnection 
+connection, String userID)</b>方法，在这里connection用来执行服务发现而userID（一个完全的xmpp ID如jdoe@example.com）用来验证。如果用户处理XHTML消息这个方法将会返回true。</p>
+
+<b>范例</b><p>
+
+在这个范例中我们可以看到如何发现是否远程用户支持XHTML消息。
+<blockquote>
+<pre>      Message msg = chat.createMessage();
+      <font color="#3f7f5f">// 包含一个常规消息体</font>
+      msg.setBody(getTextToSend());
+      <font color="#3f7f5f">// 检查对方是否支持XHTML消息</font>
+      if (XHTMLManager.isServiceEnabled(connection, chat.getParticipant())) {
+          <font color="#3f7f5f">// 从某处获得XHTML文本用于发送</font>
+          String xhtmlBody = getXHTMLTextToSend();
+
+          <font color="#3f7f5f">// 在消息中包含一个XHTML体</font>
+          XHTMLManager.addBody(msg, xhtmlBody);
+      }
+
+      <font color="#3f7f5f">// 发送消息</font>
+      chat.sendMessage(msg);
+</pre>
+</blockquote>
+</body>
+
+</html>

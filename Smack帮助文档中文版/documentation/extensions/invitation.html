@@ -1,0 +1,51 @@
+<html>
+<head>
+<title>群聊邀请</title>
+<link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+
+<body>
+
+<div class="header">群聊邀请</div><p>
+
+群聊邀请packet扩展用来邀请其它用户到聊天室。
+
+<ul>
+  <li><a href="#send">邀请其它用户</a></li>
+  <li><a href="#listen">监听邀请</a></li>
+</ul>
+
+<p>
+<b>JEP 相关:</b> N/A -- 这个协议已经过时Multi-User Chat (MUC) JEP现在有效。
+(<a href="http://www.jabber.org/jeps/jep-0045.html">JEP-45</a>). 然而大多数现有的的客房端仍然使用这个老的协议。一旦MUC得到更广泛的支持，这个API可能会被抛弃。
+
+<hr>
+
+<p><div class="subheader"><a name="send">邀请其它用户</a></div><p>
+
+要使用GroupChatInvitation packet扩展邀请另一个用户加入到聊天室，向待邀请用户发送新的消息并适当设置聊天室名称，如下面代码所示：
+<pre>
+Message message = new Message(<font color="#0000FF">"user@chat.example.com"</font>);
+message.setBody(<font color="#0000FF">"Join me for a group chat!"</font>);
+message.addExtension(new GroupChatInvitation(<font color="#0000FF">"room@chat.example.com"</font>));
+con.sendPacket(message);
+</pre>
+
+以上代码产生的邀请部分的XML将会是：
+
+<pre>
+&lt;x xmlns="jabber:x:conference" jid="room@chat.example.com"/&gt;
+</pre><p>
+
+<hr>
+<div class="subheader"><a name="listen">监听邀请</a></div><p>
+要监听群聊邀请，为元素名称<tt>x</tt>和命名空间<tt>jabber:x:conference</tt>使用PacketExtensionFilter，如下面代码所示：
+
+<pre>
+PacketFilter filter = new PacketExtensionFilter(<font color="#0000FF">"x"</font>, <font color="#0000FF">"jabber:x:conference"</font>);
+<font color="#3f7f5f">// 使用过滤器创建收集器或packet监听器...</font>
+</pre>
+
+</body>
+
+</html>

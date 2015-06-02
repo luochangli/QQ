@@ -1,0 +1,163 @@
+<html>
+<head>
+<title>Roster项目交流</title>
+<link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+
+<body>
+
+<div class="header">Roster项目交换</div><p>
+这个扩展用来从一个XMPP实体向另一个实体发送roster,roster组和roster登陆.它也提供了一种简便的方法在收到来自其它XMPP客户端的登陆时回调定制逻辑。
+<p>跟随下面的链接学习如何发送和接收roster项目:</p>
+<ul>
+  <li><a href="#riesendroster">发送完整roster</a></li>
+  <li><a href="#riesendgroup">发送roster组</a></li>
+  <li><a href="#riesendentry">发送roster登陆</a></li>
+  <li><a href="#riercventry">接收roster登陆</a></li>
+</ul>
+<b>JEP相关:</b> <a href="http://www.jabber.org/jeps/jep-0093.html">JEP-93</a>
+
+<hr>
+
+<div class="subheader"><a name="riesendroster">发送完整roster</a></div><p>
+
+<b>描述</b><p>
+有时向另一个用户发送整个roster很有用。Smack提供一种很简便的方法向另一个XMPP客户端发送完整的roster。</p>
+
+<b>用法</b><p>
+
+创建一个<i><b>RosterExchangeManager</b></i>实例并使用<b>#send(Roster, String)</b>方法向特定用户发送roster。第一个参数是要发送的roster，第二个参数是接收roster登陆的用户的id</p>
+
+<b>范例</b><p>
+
+在这个例子中我们可以看到用户1如何将他的roster发送给用户2： 
+<blockquote>
+<pre>      <font color="#3f7f5f">// 连接到服务器并登陆</font>
+      conn1 = new XMPPConnection(host);
+      conn1.login(server_user1, pass1);
+    
+      <font color="#3f7f5f">// 在conn1上创建一个新的交换管理器</font>
+      RosterExchangeManager rosterExchangeManager = new RosterExchangeManager(conn1);
+      <font color="#3f7f5f">// 发送用户1的roster给用户2</font>
+      rosterExchangeManager.send(conn1.getRoster(), user2);
+</pre>
+</blockquote>
+
+<hr>
+
+<div class="subheader"><a name="riesendgroup">发送roster组</a></div><p>
+
+<b>描述</b><p>
+
+向另一个XMPP客户端发送roster组也是可能的。roster组按照名字聚合了roster登陆的集合。</p>
+
+<b>用法</b><p>
+创建<i><b>RosterExchangeManager</b></i>的一个实例并使用<b>#send(RosterGroup, String)</b>方法来向特定用户发送roster组。第一个参数是要发送的roster组，第二个参数是接收roster登陆的用户的id。</p>
+
+<b>范例</b><p>
+
+在这个例子中我们可以看到用户1如何将他的roster组发送给用户2：
+<blockquote>
+<pre>      <font color="#3f7f5f">// 连接到服务器并登陆</font>
+      conn1 = new XMPPConnection(host);
+      conn1.login(server_user1, pass1);
+    
+      <font color="#3f7f5f">// 在conn1上创建一个新的交换管理器</font>
+      RosterExchangeManager rosterExchangeManager = new RosterExchangeManager(conn1);
+      <font color="#3f7f5f">// 发送用户1的RosterGroups给用户2</font>
+      for (Iterator it = conn1.getRoster().getGroups(); it.hasNext(); )
+          rosterExchangeManager.send((RosterGroup)it.next(), user2);
+</pre>
+</blockquote>
+
+<hr>
+
+<div class="subheader"><a name="riesendentry">发送roster登陆</a></div><p>
+
+<b>描述</b><p>
+
+Sometimes you may need to send a single  entry to another XMPP client. Smack also lets you send
+items at this  level.有时您可能需要发送一个单独roster登陆给另一个XMPP客房端。Smack也让你在这个granularity级别发送项目。</p>
+
+<b>用法</b><p>
+
+创建<i><b>RosterExchangeManager</b></i>的一个实例并且使用<b>#send(RosterEntry, String)</b>方法将登陆发送给特定用户。第一个参数是要发送的roster登陆，第二个参数是接收roster登陆的用户的id。</p>
+
+<b>范例</b><p>
+
+在这个例子中我们可以看到用户1如何向用户2发送roster登陆。 
+<blockquote>
+<pre>      <font color="#3f7f5f">// 连接到服务器并登陆</font>
+      conn1 = new XMPPConnection(host);
+      conn1.login(server_user1, pass1);
+    
+      <font color="#3f7f5f">// conn1上创建一个新的交换管理器</font>
+      RosterExchangeManager rosterExchangeManager = new RosterExchangeManager(conn1);
+      <font color="#3f7f5f">// 向（任何）用户2发送roster登陆</font>
+      rosterExchangeManager1.send((RosterEntry)conn1.getRoster().getEntries().next(), user2);
+ </pre>
+</blockquote>
+
+<hr>
+
+<div class="subheader"><a name="riercventry">接收roster登陆</a></div><p>
+
+<b>描述</b><p>
+
+因为roster项目可以在XMPP客房端发送，有必要监听可能的roster登陆。Smack提供一种机制当收到roster登陆时您可以使用它来执行制定逻辑。</p>
+
+<b>用法</b><p>
+
+<ol>
+  <li>创建实现 <i><b>RosterExchangeListener</b></i>接口的类。</li>
+  <li>实现<b>entriesReceived(String, Iterator)</b>方法，它将在带有制定逻辑的新登陆接收到时被调用。</li>
+  <li>向期望的<i>XMPPConnection</i>上的<i>RosterExchangeManager</i>添加监听器。</li>
+</ol></p>
+
+<b>范例</b><p>
+
+在这个例子中我们可以看到用户如何向用户2发送roster登陆并且用户2如何将接收到的登陆添加到他的roster中。
+<blockquote>
+<pre>      <font color="#3f7f5f">// 连接到服务器并登陆</font>
+      conn1 = new XMPPConnection(host);
+      conn1.login(server_user1, pass1);
+      conn2 = new XMPPConnection(host);
+      conn2.login(server_user2, pass2);
+      final Roster user2_roster = conn2.getRoster();
+    
+      <font color="#3f7f5f">// 创建RosterExchangeManager帮助用户2监听和接收
+      the entries received</font>
+      RosterExchangeManager rosterExchangeManager2 = new RosterExchangeManager(conn2);
+      <font color="#3f7f5f">// 创建RosterExchangeListener遍历接收的roster登陆</font>
+      RosterExchangeListener rosterExchangeListener = new RosterExchangeListener() {
+          public void entriesReceived(String from, Iterator remoteRosterEntries) {
+              while (remoteRosterEntries.hasNext()) {
+                  try {
+                      <font color="#3f7f5f">// 获得接收到的登陆</font>
+                      RemoteRosterEntry remoteRosterEntry = (RemoteRosterEntry) remoteRosterEntries.next();
+                      <font color="#3f7f5f">//在控制台显示远端登陆</font>
+                      System.out.println(remoteRosterEntry);
+                      <font color="#3f7f5f">// 将此添加到用户2的roster中</font>
+                      user2_roster.createEntry(
+                          remoteRosterEntry.getUser(),
+                          remoteRosterEntry.getName(),
+                          remoteRosterEntry.getGroupArrayNames());
+                  }
+                  catch (XMPPException e) {
+                      e.printStackTrace();
+                  }
+              }
+          }
+      };
+      <font color="#3f7f5f">// 向用户2使用的RosterExchangeManager添加RosterExchangeListener</font>
+      rosterExchangeManager2.addRosterListener(rosterExchangeListener);
+    
+      <font color="#3f7f5f">// 创建RosterExchangeManager帮助用户1发送他的roster</font>
+      RosterExchangeManager rosterExchangeManager1 = new RosterExchangeManager(conn1);
+      <font color="#3f7f5f">// 发送用户1的roster给用户2</font>
+      rosterExchangeManager1.send(conn1.getRoster(), user2);
+</pre>
+</blockquote>
+</body>
+
+</html>

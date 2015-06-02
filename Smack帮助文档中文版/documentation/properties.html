@@ -1,0 +1,100 @@
+<html>
+<head>
+	<title>Smack: Packet属性  - Jive Software</title>
+	<link rel="stylesheet" type="text/css" href="style.css" /
+</head>
+
+<body>
+
+<div class="header">
+Packet属性 
+</div>
+
+<div class="nav">
+&laquo; <a href="index.html">目录列表</a>
+</div>
+
+<p>
+Smack提供一个有效的机制，可以向packet附加任意属性。每个属性有一个String名字，这是一个java简单类型值(int, long, float, double, boolean)and a value that is a Java primitive () 或者任何序列化对象(java对象可序列化当它实现了Serializable接口)。
+</p>
+
+<p class="subheader">
+使用API</p>
+
+<p>
+所有主要对象支持属性，如Message对象。下面的代码显示如何设置属性：
+</p>
+
+<div class="code"><pre>
+Message message = chat.createMessage();
+<font color="gray"></i>// 添加一个Color对象作为属性。</i></font>
+message.setProperty(<font color="blue">"favoriteColor"</font>, new Color(0, 0, 255));
+<font color="gray"></i>// 添加一个int作为属性。</i></font>
+message.setProperty(<font color="blue">"favoriteNumber"</font>, 4);
+chat.sendMessage(message);
+</pre></div>
+
+<p>
+使用如下代码获得这些属性：
+</p>
+
+<div class="code"><pre>
+Message message = chat.nextMessage();
+<font color="gray"></i>// 获得一个Color对象属性。</i></font>
+Color favoriteColor = (Color)message.getProperty(<font color="blue">"favoriteColor"</font>);
+<font color="gray"></i>// 获得一个intg属性，注意属性作为对象返回，我们必须把值转换为Integer，然后转换为int。</i></font>
+int favoriteNumber = ((Integer)message.getProperty(<font color="blue">"favoriteNumber"</font>)).intValue();
+</pre></div>
+
+<p class="subheader">
+对象作为属性
+</p>
+
+<p>
+使用对象作为属性值是一个非常强大和容易的交换数据的方式。然而，您应该牢记如下：
+</p>
+
+<ul>
+ 	<li>Packet extension有更多标准方法添加额外数据到XMPP节。在某些情况下使用属性可能更方便，由于Smack自身会做处理XML的工作。
+
+	<li>当你将Java对象作为属性发送时，只有运行着Java的客户端能够解释数据。所以，应该考虑将数据转换为一系列简单类型的值来代替Java对象。
+
+	<li>作为属性值发送的对象必须实现Serialiable。另外，发送端和接收端都必须有同种的类，否则当系列化对象时会发生序列化异常。
+	<li>序列化的对象可能会很大，这将使用更多的带宽和服务器资源。
+</ul>
+
+<p class="subheader">
+XML格式
+</p>
+
+<p>
+当前用于发送属性数据XML格式还不规范，所以很可能难以被不使用Smack的客户端识别。XML犹如下面所示(附清晰的注释)： 
+</p>
+
+<div class="code"><pre>
+<font color="gray"><i>&lt;!--某块中的所有属性。 --&gt;</i></font> 
+&lt;properties xmlns="http://www.jivesoftware.com/xmlns/xmpp/properties"&gt;
+    <font color="gray"><i>&lt;!-- 首选，一个名为"prop1"的integer型值。--&gt;</i></font> 
+    &lt;property&gt;
+        &lt;name&gt;prop1&lt;/name&gt;
+        &lt;value type="integer"&gt;123&lt;/value&gt;
+    &lt;property&gt;
+    <font color="gray"><i>&lt;!-- 其次，一个序列化的Java对象，然后从二进制数据转换到base-64编码的文本。 --&gt;</i></font>  
+    &lt;property&gt;
+        &lt;name&gt;blah2&lt;/name&gt;
+        &lt;value type="java-object"&gt;adf612fna9nab&lt;/value&gt;
+    &lt;property&gt;
+&lt;/properties&gt; 
+</pre></div>
+
+<p>
+当前支持的类型有：<tt>integer</tt>, <tt>long</tt>, <tt>float</tt>, 
+<tt>double</tt>, <tt>boolean</tt>, <tt>string</tt>, 和<tt>java对象</tt>。
+</p>
+
+<div class="footer">
+Copyright &copy; Jive Software 2002-2004
+</div>
+
+</body>
+</html>

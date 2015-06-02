@@ -1,0 +1,162 @@
+<html>
+<head>
+	<title>Smack: Privacy - Jive Software</title>
+	<link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+
+<body>
+
+<div class="header">
+Privacy
+</div>
+
+<div class="nav">
+&laquo; <a href="index.html">目录列表</a>
+</div>
+
+<p class="subheader">Privacy是什么?</p>
+<p>
+<tt>Privacy</tt>是用户阻挡其它个别用户的通信的方法。在XMPP中它通过操作隐私列表完成。<br />通过下面的用例服务器端隐私列表能够成功完成：
+<ul>
+<li>重新获得某人的隐私列表。
+<li>添加，删除，并编辑某人的隐私列表。 
+<li>设置，更改，或放弃活动列表。
+<li>设置，更改，或放弃默认列表（也就是默认活动的列表）。 
+<li>基于JID，组，或签名类型（或全部）允许或阻挡消息。
+<li>基于JID，组，或签名类型（或全部）允许或阻挡向内的出席通知。
+<li>基于JID，组，或签名类型（或全部）允许或阻挡向外的出席通知。
+<li>基于JID，组，或签名类型（或全部）允许或阻挡IQ节。
+<li> 基于JID，组，或签名类型（或全部）允许或阻所有通信。
+</ul>
+<p>
+
+<p class="subheader">怎么使用它？</p>
+
+<p>
+API实现有三个主公共类：
+<ul>
+	<li><tt>PrivacyListManager</tt>: 这是重新获得并处理服务器隐私列表的主API类。
+    <li><tt>PrivacyList</tt>: 代表一个隐私列表，有一个名字，一组隐私项目。例如，可见或不可见列表。
+	<li><tt>PrivacyItem</tt>:阻挡或允许隐私的某个方面。例如，允许我的的朋友看到我们的出席状态。
+</ul>
+<ol>
+<li> 正确从头开始，客户端可以<b>获得他的/她的存储在服务器上的隐私列表：</b><br />
+<div class="code">
+<pre>
+	<font color="gray"><i>// 为当前连接创建一个隐私管理器。</i></font>
+	PrivacyListManager privacyManager = PrivacyListManager.getInstanceFor(myConnection);
+	<font color="gray"><i>// 重新获得服务器隐私列表。</i></font>
+	PrivacyList[] lists = privacyManager.getPrivacyLists();
+</pre> 
+</div>
+正在客户端能够显示服务器的每个<tt>PrivacyItem</tt>和每个列表是否是活动的，默认或没有。客户端是一个隐私变化的监听器。<br />
+<br />
+<li> 要<b>向服务器添加一个新列表</b>，客户端可以像这样执行：
+<div class="code">
+<pre>
+	<font color="gray"><i>// 设置列表的名称</i></font>
+	String listName = <font color="green">"newList"</font>;
+
+	<font color="gray"><i>// 创建<tt>PrivacyItem</tt>的列表，<tt>PrivacyItem</tt>将会允许或拒绝某些隐私方面。</i></font>
+	String user = <font color="green">"tybalt@example.com"</font>;
+	String groupName = <font color="green">"enemies"</font>;
+	ArrayList privacyItems = new ArrayList();
+
+	PrivacyItem item = new PrivacyItem(PrivacyRule.<font color="navy"><i>JID</i></font>, <font color="navy">true</font>, 1);
+	item.setValue(user);
+	privacyItems.add(item);
+
+	item = new PrivacyItem(PrivacyRule.<font color="navy"><i>SUBSCRIPTION</i></font>, <font color="navy">true</font>, 2);
+	item.setValue(PrivacyRule.<font color="navy"><i>SUBSCRIPTION_BOTH</i></font>);
+	privacyItems.add(item);
+     	
+	item = new PrivacyItem(PrivacyRule.<font color="navy"><i>GROUP</i></font>, <font color="navy">false</font>, 3);
+	item.setValue(groupName);
+	item.setFilterMessage(<font color="navy">true</font>);
+	privacyItems.add(item);
+
+	<font color="gray"><i>// 获得当前连接的隐私管理器。</i></font>
+	PrivacyListManager privacyManager = PrivacyListManager.getInstanceFor(myConnection);
+	<font color="gray"><i>// 创建新列表。</i></font>
+	privacyManager.createPrivacyList(listName, Arrays.<i>asList</i>(privacyItems));
+</pre> 
+</div>
+
+<li> 要<b>修改一个已存的列表</b>，客户端代码可能像这样：
+<div class="code">
+<pre>
+	<font color="gray"><i>// 设置列表名称</i></font>
+	String listName = <font color="green">"existingList"</font>;
+	<font color="gray"><i>//获得当前连接的隐私管理器。</i></font>
+	PrivacyListManager privacyManager = PrivacyListManager.getInstanceFor(myConnection);
+	<font color="gray"><i>// 向服务器发送新列表。</i></font>
+	privacyManager.updatePrivacyList(listName, items);
+</pre> 
+</div>
+注意<tt>items</tt>在例2中定义并且<em>必须</em>包含列表中的所有元素（not the "delta"）。
+
+<li> 要<b>删除一个已存在的列表</b>，客户端可以像这样执行：
+<div class="code">
+<pre>
+	<font color="gray"><i>// 设置列表名称</i></font>
+	String listName = <font color="green">"existingList"</font>;
+	<font color="gray"><i>// 获得当前连接的隐私管理器。</i></font>
+	PrivacyListManager privacyManager = PrivacyListManager.getInstanceFor(myConnection);
+	<font color="gray"><i>// 删除列表。</i></font>
+	privacyManager.deletePrivacyList(listName);
+</pre> 
+</div>
+
+<li> 要<b>放弃活动列表的使用</b>，客户端可以像这样执行：
+<div class="code">
+<pre>
+	<font color="gray"><i>// 获得当前连接的隐私管理器。</i></font>
+	PrivacyListManager privacyManager = PrivacyListManager.getInstanceFor(myConnection);
+	<font color="gray"><i>// 放弃活动列表的使用。</i></font>
+	privacyManager.declineActiveList();
+</pre> 
+</div>
+
+<li> 要<b>放弃默认列表的使用</b>,客户端可以像这样执行：
+<div class="code">
+<pre>
+	<font color="gray"><i>// 获得当前连接的隐私管理器。</i></font>
+	PrivacyListManager privacyManager = PrivacyListManager.getInstanceFor(myConnection);
+	<font color="gray"><i>// 放弃默认列表的使用。</i></font>
+	privacyManager.declineDefaultList();
+</pre> 
+</div>
+
+</ol>
+
+<p class="subheader">监听Privacy变化</p>
+<p>
+为了处理隐私变化，客户端<em>应该</em> 监听管理器的更新。当一个列表更改时管理器通知每个已添加的监听器。监听<em>必须</em>实现<tt>PrivacyListListener</tt>接口。
+当隐私列表被修改时客户端可能需要作出反应。<tt>PrivacyListManager</tt>让您添加监听器，它将在列表被改变时得知通知。监听器应该实现<tt>PrivacyListListener</tt>接口<br />
+最重要的通知是<tt>updatedPrivacyList</tt>，它当隐私列表改变它的隐私项目时被执行。<br />
+
+当执行如下代码监听器能得到通知：
+<div class="code">
+<pre>
+	<font color="gray"><i>// 获得当前连接的隐私管理器。</i></font>
+	PrivacyListManager privacyManager = PrivacyListManager.getInstanceFor(myConnection);
+	<font color="gray"><i>// 为了得到通知添加监听器(this)</i></font>
+	privacyManager.addListener(<font color="navy">this</font>);
+</pre> 
+</div>
+</p>
+
+<p class="subheader">参考</p>
+<ul>
+    <li><a href="http://www.xmpp.org/specs/rfc3921.html#privacy">Blocking communication</a>源自RFC3921.
+</ul>
+</p>
+
+<br clear="all" /><br><br>
+
+<div class="footer">
+Copyright &copy; Jive Software 2002-2006
+</div>
+
+</body>
+</html>

@@ -1,0 +1,503 @@
+<html>
+<head>
+<title>多人聊天</title>
+<link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+
+<body>
+<div class="header">多人聊天</div><p>
+
+允许构造，参与，并管理个别的基于文本的会议聊天室。<p>
+
+<ul>
+  <li><a href="#create">创建新聊天室</a></li>
+  <li><a href="#join">加入聊天室</a></li>
+  <li><a href="#invite">控制聊天室邀请</a></li>
+  <li><a href="#discomuc">查看MUC支持</a></li>
+  <li><a href="#discojoin">查看已加聊天室</a></li>
+  <li><a href="#discoroom">查看聊天室信息</a></li>
+  <li><a href="#privchat">开始私聊</a></li>
+  <li><a href="#subject">管理聊天室主题变更</a></li>
+  <li><a href="#role">管理角色变更</a></li>
+  <li><a href="#afiliation">管理从属关系变更</a></li>
+</ul>
+<b>JEP related:</b> <a href="http://www.jabber.org/jeps/jep-0045.html">JEP-45</a>
+
+<hr>
+
+<div class="subheader"><a name="create">创建新聊天室</a></div><p>
+
+<b>描述</b><p>
+被许可的可以用户创建新的聊天室.您可以创建两类聊天室。<b>Instant rooms</b>适用立即进入和基于一些默认配置自动创建。<b>Reserved rooms</b>在允许其它人进入之前由聊天室创建者手动配置。</p>
+
+<b>用法</b><p>
+要创建聊天室您需要首先创建<i><b>MultiUserChat</b></i>的一个实例。聊天室名字通过构造方法传递给要创建的聊天室。下一骤是调用<i><b>MultiUserChat</b></i>的<b>create(String nickname)</b>方法在这里nickname是加入聊天室用的昵称。</p><p>
+
+根据您要创建的聊天室的类型您需要使用不同配置表单。要创建一个Instant room调用<b>sendConfigurationForm(Form form)</b>方法在这里表单是一个空表单。但是如果您想创建一个Reserved room您应该首先获得聊天室的配置表单，完成表单，最后将它发送回服务器。</p>
+
+<b>范例</b><p>
+
+在这个例子中我们可以看到如何创建一个instant room：<br>
+<blockquote>
+<pre>      <font color="#3f7f5f">// 使用XMPPConnection创建一个MultiUserChat</font>
+      MultiUserChat muc = new MultiUserChat(conn1, <font color="#0000FF">"myroom@conference.jabber.org"</font>);
+
+      <font color="#3f7f5f">//创建聊天室</font>
+      muc.create(<font color="#0000FF">"testbot"</font>);
+
+      <font color="#3f7f5f">// 发送一个空表单配置这显示我们想要一个instant room</font>
+      <font color="#3f7f5f"></font>
+      muc.sendConfigurationForm(new Form(Form.TYPE_SUBMIT));
+</pre>
+</blockquote>
+
+在这个例子中我们可以看到如何创建一个reserved room.表单使用默认值完成： <br>
+<blockquote>
+<pre>      <font color="#3f7f5f">// 使用XMPPConnection创建一个MultiUserChat</font>
+      MultiUserChat muc = new MultiUserChat(conn1, <font color="#0000FF">"myroom@conference.jabber.org"</font>);
+
+      <font color="#3f7f5f">// 创建聊天室</font>
+      muc.create(<font color="#0000FF">"testbot"</font>);
+
+      <font color="#3f7f5f">// 获得聊天室的配置表单</font>
+      Form form = muc.getConfigurationForm();
+      <font color="#3f7f5f">// 根据原始表单创建一个要提交的新表单。</font>
+      Form submitForm = form.createAnswerForm();
+      <font color="#3f7f5f">// 向要提交的表单添加默认答复</font>
+      for (Iterator fields = form.getFields(); fields.hasNext();) {
+          FormField field = (FormField) fields.next();
+          if (!FormField.TYPE_HIDDEN.equals(field.getType()) && field.getVariable() != null) {
+              <font color="#3f7f5f">// 设置默认值作为答复</font>
+              submitForm.setDefaultAnswer(field.getVariable());
+          }
+      }
+      <font color="#3f7f5f">// 设置聊天室的新拥有者</font>
+      List owners = new ArrayList();
+      owners.add(<font color="#0000FF">"johndoe@jabber.org"</font>);
+      submitForm.setAnswer(<font color="#0000FF">"muc#roomconfig_roomowners"</font>, owners);
+      <font color="#3f7f5f">// 发送已完成的表单（有默认值）到服务器来配置聊天室</font>
+      muc.sendConfigurationForm(submitForm);
+</pre>
+</blockquote>
+
+<hr>
+
+<div class="subheader"><a name="join">加入聊天室</a></div><p>
+
+<b>描述</b><p>
+通常您向聊天室发送消息的第一步是加入这个聊天室。多人聊天允许在加入聊天室时指定一个参数。基本上您可以控制加入聊天室后接收的历史记录的数量花并且还可以提供聊天室里的昵称和密码如果聊天室有密码保护的话。</p>
+
+<b>用法</b><p>
+要加入一个聊天室您需要首先创建一个<i><b>MultiUserChat</b></i>的实例。把您要加入的聊天室的名称传递给构造方法。下一步是调用<i><b>MultiUserChat</b></i>实例的<b>join(...)</b>方法。但是您首先要决定发送哪种加入消息。如果您想加入没有密码和没有指定要发送的历史记录的数量您可以使用<b>join(String nickname)</b>方法，在这里 nickname是您在聊天室的昵称。万一聊天室需要密码想加入您可以使用<b>join(String nickname, String password)</b>方法。最后，最完整的加入聊天室的方法是调用<b>join(String nickname, String password, DiscussionHistory history, long timeout)</b>方法，在这里nickname是您在聊天室的昵称，password是您加入聊天室的密码，history是指定要接收的历史记录的数量的对象，timeout是等待服务器响应的毫秒数。</p>
+
+<b>范例</b><p>
+
+在这个例子中我们可以看到如何使用特定昵称加入一个聊天室: <br>
+<blockquote>
+<pre>      <font color="#3f7f5f">// 使用XMPPConnection创建一个MultiUserChat</font>
+      MultiUserChat muc2 = new MultiUserChat(conn1, <font color="#0000FF">"myroom@conference.jabber.org"</font>);
+
+      <font color="#3f7f5f">// 用户2加入新聊天室</font>
+      <font color="#3f7f5f">// 聊天室服务将会决定要发送的历史记录数量</font>
+      muc2.join(<font color="#0000FF">"testbot2"</font>);
+</pre>
+</blockquote>
+
+在这个例子中我们可以看到如何使用特定昵称和密码加入聊天室: <br>
+<blockquote>
+<pre>      <font color="#3f7f5f">// 使用XMPPConnection创建一个MultiUserChat</font>
+      MultiUserChat muc2 = new MultiUserChat(conn1, <font color="#0000FF">"myroom@conference.jabber.org"</font>);
+
+      <font color="#3f7f5f">// 用户2使用密码加入新聊天室</font>
+      <font color="#3f7f5f">// 聊天室服务将会决定要发送的历史记录数量</font>
+      muc2.join(<font color="#0000FF">"testbot2"</font>, <font color="#0000FF">"password"</font>);
+</pre>
+</blockquote>
+
+在这个例子中我们可以看到如何使用特定昵称和要接收的历史记录的数量：<br>
+<blockquote>
+<pre>      <font color="#3f7f5f">// 使用XMPPConnection创建一个MultiUserChat</font>
+      MultiUserChat muc2 = new MultiUserChat(conn1, <font color="#0000FF">"myroom@conference.jabber.org"</font>);
+
+      <font color="#3f7f5f">// 用户2使用密码和指定要接收的历史记录的数量加入新聊天室</font>
+      <font color="#3f7f5f">// 在这个例子中我们请求最后5条消息。</font>
+      DiscussionHistory history = new DiscussionHistory();
+      history.setMaxStanzas(5);
+      muc2.join(<font color="#0000FF">"testbot2"</font>, <font color="#0000FF">"password"</font>, history, SmackConfiguration.getPacketReplyTimeout());
+</pre>
+</blockquote>
+
+<hr>
+
+<div class="subheader"><a name="invite">控制聊天室邀请</a></div><p>
+
+<b>描述</b><p>
+某人从自己拥有的聊天室邀请另一个人到聊天室是和有用的。根据聊天室的类型被邀请者可能接收一个用于加入聊天室的密码并且/或者被加到成员列表中如果聊天室是members-only类型的。Smack允许发送聊天室邀请并且允许潜在被邀请人监听聊天室邀请和邀请人监听被邀请人的拒绝。</p>
+
+<b>用法</b><p>
+要邀请另一个用户到聊天室您必须已经加入了该聊天室。一旦您加入了调用<i><b>MultiUserChat</b></i>的<b>invite(String participant, String reason)</b>方法,在这里participant是您要邀请的用户(例如hecate@shakespeare.lit),reason是用户被邀请的原因。</p><p>
+
+如果潜在被邀请人想监听聊天室邀请,被邀请人必须向<i><b>MultiUserChat</b></i>类添加一个<i><b>InvitationListener</b></i>。因为<i><b>InvitationListener</b></i>是一个<i>接口</i>,需要创建一个类实现这个<i>接口</i>。如果邀请人相监听聊天室邀请拒绝,只要向<i><b>MultiUserChat</b></i>添加一个 <i><b>InvitationRejectionListener</b></i>。<i><b>InvitationRejectionListener</b></i>也是一个接口所以您需要创建一个类实现这个接口。
+</p>
+
+<b>范例</b><p>
+
+在这个例子中我们可以看到如何邀请另一个用户到聊天室并且监听可能的拒绝: <br>
+<blockquote>
+<pre>      <font color="#3f7f5f">// 用户2加入聊天室</font>
+      MultiUserChat muc2 = new MultiUserChat(conn2, room);
+      muc2.join(<font color="#0000FF">"testbot2"</font>);
+
+      <font color="#3f7f5f">// 用户2监听邀请拒绝</font>
+      muc2.addInvitationRejectionListener(new InvitationRejectionListener() {
+          public void invitationDeclined(String invitee, String reason) {
+              <font color="#3f7f5f">// 在这做您需要做的...</font>
+          }
+      });
+
+      <font color="#3f7f5f">// 用户2邀请用户3加入聊天室</font>
+      muc2.invite(<font color="#0000FF">"user3@host.org/Smack"</font>, <font color="#0000FF">"Meet me in this excellent room"</font>);
+</pre>
+</blockquote>
+
+在这个例子中我们可以看到如何监听聊天邀请和拒绝邀请:<br>
+<blockquote>
+<pre>      <font color="#3f7f5f">// 用户3监听MUC邀请</font>
+      MultiUserChat.addInvitationListener(conn3, new InvitationListener() {
+          public void invitationReceived(XMPPConnection conn, String room, String inviter, String reason, String password) {
+              <font color="#3f7f5f">// 拒绝邀请</font>
+              MultiUserChat.decline(conn, room, inviter, <font color="#0000FF">"I'm busy right now"</font>);
+          }
+      });
+</pre>
+</blockquote>
+
+<hr>
+
+<div class="subheader"><a name="discomuc">查看MUC支持</a></div><p>
+
+<b>描述</b><p>
+
+用户可能想查看其联系人是否支持多人聊天协议。</p>
+
+<b>用法</b><p>
+要查看联系人是否支持MUC只需调用<i><b>MultiUserChat</b></i>类的<b>isServiceEnabled(XMPPConnection connection, String user)</b>方法，在这里user是完全的XMPP ID，例如：jdoe@example.com。您将会收到一个布尔值指示用户是否支持MUC协议。</p>
+
+<b>范例</b><p>
+
+在这个例子中我们可以看到如何查看MUC的支持： <br>
+<blockquote>
+<pre>      <font color="#3f7f5f">// 查看user3@host.org是否支持MUC</font>
+      boolean supports = MultiUserChat.isServiceEnabled(conn, <font color="#0000FF">"user3@host.org/Smack"</font>);
+</pre>
+</blockquote>
+
+<hr>
+
+<div class="subheader"><a name="discojoin">查看已加聊天室</a></div><p>
+
+<b>描述</b><p>
+
+用户可能也想查询一个联系人加入了哪些聊天室。</p>
+
+<b>用法</b><p>
+要得到用户所在的聊天室只需调用<i><b>MultiUserChat</b></i>类的<b>getJoinedRooms(XMPPConnection connection, String user)</b>方法，在这里user是完全的XMPP ID，例如：jdoe@example.com。您将会得到一个字符串的Iterator，每个字符串代表一个聊天室名称。</p>
+
+<b>范例</b><p>
+在这个例子中我们可以看到如何得到一个用户所在的聊天室：<br>
+<blockquote>
+<pre>      <font color="#3f7f5f">// 获得user3@host.org加入的聊天室</font>
+      Iterator joinedRooms = MultiUserChat.getJoinedRooms(conn, <font color="#0000FF">"user3@host.org/Smack"</font>);
+</pre>
+</blockquote>
+
+<hr>
+
+<div class="subheader"><a name="discoroom">查看聊天室信息</a></div><p>
+
+<b>描述</b><p>
+
+用户可能需要在不加入聊天室的情况下查看这个聊天室的信息。服务器只为公共聊天室提供信息。</p>
+
+<b>用法</b><p>
+要查看一个聊天室的信息只需调用<i><b>MultiUserChat</b></i>类的<b>getRoomInfo(XMPPConnection connection, String room)</b>方法，在这里romm是聊天室完全的XMPP ID，例如：roomName@conference.myserver。您将会得到一个包含查看的聊天室信息的RoomInfo对象。</p>
+
+<b>范例</b><p>
+
+在这个例子中我们可以看到如何查看一个聊天室的信息: <br>
+<blockquote>
+<pre>      <font color="#3f7f5f">// 查看roomName@conference.myserver聊天室的信息 </font>
+      RoomInfo info = MultiUserChat.getRoomInfo(conn, <font color="#0000FF">"roomName@conference.myserver"</font>);
+      System.out.println("Number of occupants:" + info.getOccupantsCount());
+      System.out.println("Room Subject:" + info.getSubject());
+</pre>
+</blockquote>
+
+<hr>
+
+<div class="subheader"><a name="privchat">开启私聊</a></div><p>
+
+<b>描述</b><p>
+
+一个聊天室成员和另一个聊天室成员可能想要开启私聊即使在他们不知道彼此的完全XMPP ID（例如：jdoe@example.com）</p>
+
+<b>用法</b><p>
+要和另一个聊天室成员创建私聊只需调用您加入的<i><b>MultiUserChat</b></i>的<b>createPrivateChat(String participant)</b>方法。参数participant是成员的唯一聊天室JID（例如：'darkcave@macbeth.shakespeare.lit/Paul'）。您将会收到一个常规<i><b>Chat</b></i>对象并可使用和另一个聊天室成员聊天。</p>
+
+<b>范例</b><p>
+
+在这个例子中我们可以看到如何开启和另一个聊天室成员的私聊: <br>
+<blockquote>
+<pre>      <font color="#3f7f5f">// 开启和另一个成员的私聊</font>
+      Chat chat = muc2.createPrivateChat(<font color="#0000FF">"myroom@conference.jabber.org/johndoe"</font>);
+      chat.sendMessage(<font color="#0000FF">"Hello there"</font>);
+</pre>
+</blockquote>
+
+<hr>
+
+<div class="subheader"><a name="subject">管理聊天室主题变更</a></div><p>
+
+<b>描述</b><p>
+
+多人聊天室共有的特征是改变聊天室内的主题的能力.默认情况下,只有"moderator"角色的用户对允许改变聊天室内的主题.尽管一些聊天室可能设置为允许少量参与者或甚至是游客可以改变主题。</p><p>
+在每次聊天室主题改变时您可能想得到修改的通知。新主题可能被用来显示室内消息。</p>
+
+<b>用法</b><p>
+
+要修改聊天室的主题只需调用您加入的聊天室的<i><b>MultiUserChat</b></i>的<b>changeSubject(String subject)</b>方法，在这里subject是新聊天室主题。另一方面，如果您想在主题被修改时得到通知，您应该使用<i><b>MultiUserChat</b></i>的<b>addSubjectUpdatedListener(SubjectUpdatedListener listener)</b>方法来向<i><b>MultiUserChat</b></i>添加一个<i><b>SubjectUpdatedListener</b></i>。因为<i><b>SubjectUpdatedListener</b></i>是一个<i>interface</i>，您需要创建一个类实现这个<i>接口</i>。</p>
+
+<b>范例</b><p>
+在这个例子中我们可以看到如何修改聊天室的主题并对主题的修改作出反应: <br>
+<blockquote>
+<pre>      <font color="#3f7f5f">// 一个成员想在聊天室主题被改变时得到通知</font>
+      muc3.addSubjectUpdatedListener(new SubjectUpdatedListener() {
+          public void subjectUpdated(String subject, String from) {
+              ....
+          }
+      });
+
+      <font color="#3f7f5f">// 一个聊天室成员改变了主题</font>
+      muc2.changeSubject(<font color="#0000FF">"New Subject"</font>);
+</pre>
+</blockquote>
+
+<hr>
+
+<div class="subheader"><a name="role">管理角色变更</a></div><p>
+
+<b>描述</b><p>
+
+一个成员可能有以下四种已定义角色：</p>
+<ol start="" type="">
+   <li>主持者(Moderator)</li>
+   <li>参与者(Participant)</li>
+   <li>游客(Visitor)</li>
+   <li>无(没有角色)(None)</li>
+</ol><p>
+这些角色是临时的因为他们在用户访问聊天室时并不持续并且可能在成员访问聊天室的过程中改变。</p><p>
+
+主持乾是聊天室中最强有力的成员,在某种程度上他能管理其它成员在聊天室中的角色.参与者比主持者有少的特权,即使他或她一直有说话的权力.游客是受更多限制的角色,因为游客不能向所有成员发送消息。</p><p>
+
+角色的批准,废除,维持基于成员的聊天室昵称或全JID.无论何时一个成员的角色发生改变Smack会触发特定事件。</p>
+
+<b>用法</b><p>
+
+要批准发言权（也就是合某人成为<i>参与者</i>）调用<i><b>MultiUserChat</b></i>的<b>grantVoice(String nickname)</b>方法。使用<b>revokeVoice(String nickname)</b>方法废除成员的发言权（也就是使成员成为<i>游客</i>）。</p><p>
+
+要批准参与者或游客的主持者特权使用<i><b>MultiUserChat</b></i>的<b>grantModerator(String nickname)</b>方法。使用<b>revokeModerator(String nickname)</b>方法废除主持者特权使之成为参与者。</p><p>
+
+Smack允许您监听角色更改事件。如果您对角色更改事件感兴趣，使用监听器<b><i>ParticipantStatusListener</i></b>。但是如果您对您自己的角色更改感兴趣，使用监听器<b><i>UserStatusListener</i></b>。二者都应该分别使用<b>addParticipantStatusListener(ParticipantStatusListener listener)</b>方法或<b>addUserStatusListener(UserStatusListener listener)</b>方法添加到<i><b>MultiUserChat</b></i>。这些监听器包括一些通知事件但您可能只对某些感兴趣。Smack为这些监听器提供默认实现避免您实现全部接口方法。默认实现是<b><i>DefaultUserStatusListener</i></b>和<b><i>DefaultParticipantStatusListener</i></b>。下面您会看到监听器的方法无论何时成员角色更改时。</p><p>
+
+这些是当角色升级时触发的事件：
+</p>
+<table border="1">
+<tr><td><b>原角色</b></td><td><b>新角色</b></td><td><b>事件</b></td></tr>
+      
+<tr><td>None</td><td>Visitor</td><td>--</td></tr>
+<tr><td>Visitor</td><td>Participant</td><td>voiceGranted</td></tr>
+<tr><td>Participant</td><td>Moderator</td><td>moderatorGranted</td></tr>
+
+<tr><td>None</td><td>Participant</td><td>voiceGranted</td></tr>
+<tr><td>None</td><td>Moderator</td><td>voiceGranted + moderatorGranted</td></tr>
+<tr><td>Visitor</td><td>Moderator</td><td>voiceGranted + moderatorGranted</td></tr>
+</table><p>
+
+这些是当角色降级时触发的事件：
+</p>
+<table border="1">
+<tr><td><b>原角色</b></td><td><b>新角色</b></td><td><b>事件</b></td></tr>
+      
+<tr><td>Moderator</td><td>Participant</td><td>moderatorRevoked</td></tr>
+<tr><td>Participant</td><td>Visitor</td><td>voiceRevoked</td></tr>
+<tr><td>Visitor</td><td>None</td><td>kicked</td></tr>
+
+<tr><td>Moderator</td><td>Visitor</td><td>voiceRevoked + moderatorRevoked</td></tr>
+<tr><td>Moderator</td><td>None</td><td>kicked</td></tr>
+<tr><td>Participant</td><td>None</td><td>kicked</td></tr>
+</table></p>
+
+<b>范例</b><p>
+
+ 在这个例子中我们可以看到如何批准游客的发言权并且监听通知事件：<br>
+<blockquote>
+<pre>      <font color="#3f7f5f">// 用户1创建聊天室</font>
+      muc = new MultiUserChat(conn1, <font color="#0000FF">"myroom@conference.jabber.org"</font>);
+      muc.create(<font color="#0000FF">"testbot"</font>);
+
+      <font color="#3f7f5f">// 用户1 (聊天室所有者)配置聊天室为 moderated聊天室</font>
+      Form form = muc.getConfigurationForm();
+      Form answerForm = form.createAnswerForm();
+      answerForm.setAnswer(<font color="#0000FF">"muc#roomconfig_moderatedroom"</font>, <font color="#0000FF">"1"</font>);
+      muc.sendConfigurationForm(answerForm);
+
+      <font color="#3f7f5f">// 用户2加入新聊天室（作为游客）</font>
+      MultiUserChat muc2 = new MultiUserChat(conn2, <font color="#0000FF">"myroom@conference.jabber.org"</font>);
+      muc2.join(<font color="#0000FF">"testbot2"</font>);
+      <font color="#3f7f5f">// 用户2将会监听自己的发言权通知事件</font>
+      muc2.addUserStatusListener(new DefaultUserStatusListener() {
+          public void voiceGranted() {
+              super.voiceGranted();
+              ...
+          }
+          public void voiceRevoked() {
+              super.voiceRevoked();
+              ...
+          }
+      });
+
+      <font color="#3f7f5f">// 用户3加入新聊天室（作为游客）</font>
+      MultiUserChat muc3 = new MultiUserChat(conn3, <font color="#0000FF">"myroom@conference.jabber.org"</font>);
+      muc3.join(<font color="#0000FF">"testbot3"</font>);
+      <font color="#3f7f5f">//用户名将会监听其它成员发言权通知事件</font>
+      muc3.addParticipantStatusListener(new DefaultParticipantStatusListener() {
+          public void voiceGranted(String participant) {
+              super.voiceGranted(participant);
+              ...
+          }
+
+          public void voiceRevoked(String participant) {
+              super.voiceRevoked(participant);
+              ...
+          }
+      });
+
+      <font color="#3f7f5f">// 房主批准用户2的发言权</font>
+      muc.grantVoice(<font color="#0000FF">"testbot2"</font>);
+</pre>
+</blockquote>
+
+<hr>
+
+<div class="subheader"><a name="afiliation">管理从属关系变更</a></div><p>
+
+<b>描述</b><p>
+
+对于一个聊天室用户可以有五种从属关系:</p>
+<ol start="" type="">
+  <li>所有者Owner</li>
+  <li>管理员Admin</li>
+  <li>成员Member</li>
+  <li>被驱逐者Outcast</li>
+  <li>无 (不存在从属关系)None</li>
+</ol><p>
+
+这些从属关系是暂时的因为它们在用户访问聊天室时持续并不受聊天室事件影响。从属关系基于用户JID批准，废除和维持。</p><p>
+
+如果没有已定义从属关系的用户登陆聊天室，此用户的从属关系被定义为&quot;none&quot;;然而，这个从属关系并不能通过访问持续。</p><p>
+
+Owners和admins对某些行为具有免疫。特别地，一个owner或admin不能被从聊天室中踢出并且不能被禁止。在对admin执行上述的行为时他或她必须首先放弃从属关系（也就是具有&quot;none&quot;或&quot;member&quot;从属关系）。</p><p>
+
+member从属关系为聊天室owner或admin提供一种方式来指定一个用户&quot;whitelist&quot;，这些用户被允许加入一个仅成员的聊天室。当成员加入仅成员聊天室，他或她的从属关系没有改变，而不管他或她的角色是什么。member从属关系也为用户提供一种方式来有效地注册一个开放的聊天室并以某种方式和那个聊天室永久地关系在一起（一种方式是用户的昵称在聊天室中保留）。</p><p>
+
+outcast是被聊天室禁止的用户并且不允许进入聊天室。当用户的从属关系改变时Smack会触发相应的事件。</p>
+
+<b>用法</b><p>
+
+要批准成员资格，管理员特权或所有者特权分别调用<i><b>MultiUserChat</b></i>的<b>grantMembership(String jid)</b>, <b>grantAdmin(String jid)</b>或 <b>grantOwnership(String jid)</b>方法。分别使用<b>revokeMembership(String jid)</b>, <b>revokeAdmin(String jid)</b> 
+或<b>revokeOwnership(String jid)</b>方法废除成员资格，管理员特权或所有者特权。</p><p>
+
+要从聊天室禁止用户调用<i><b>MultiUserChat</b></i>的<b>banUser(String jid, String reason)</b>方法。</p><p>
+
+Smack允许您监听从属关系更改事件。如果您对监听用户从属关系更改事件感兴趣使用监听器<b><i>ParticipantStatusListener</i></b>。但如果您对监听您自己的从属关系更改事件感兴趣，使用监听器<b><i>UserStatusListener</i></b>。两者应分别使用<b>addParticipantStatusListener(ParticipantStatusListener listener)</b>方法或<b>addUserStatusListener(UserStatusListener listener)</b>方法添加到 <i><b>MultiUserChat</b></i>。这些监听器包括一些通知事件但您可能只对某些感兴趣。Smack为这些监听器提供默认实现避免您实现所有接口方法。默认实现是<b><i>DefaultUserStatusListener</i></b>和<b><i>DefaultParticipantStatusListener</i></b>。下面您会看到当用户从属关系更改时调用的监听器的方法。</p><p>
+
+这些是当从属关系升级时触发的事件：
+</p>
+<table border="1">
+<tr><td><b>原关系</b></td><td><b>新关系</b></td><td><b>事件</b></td></tr>
+
+<tr><td>None</td><td>Member</td><td>membershipGranted</td></tr>
+<tr><td>Member</td><td>Admin</td><td>membershipRevoked + adminGranted</td></tr>
+<tr><td>Admin</td><td>Owner</td><td>adminRevoked + ownershipGranted</td></tr>
+
+<tr><td>None</td><td>Admin</td><td>adminGranted</td></tr>
+<tr><td>None</td><td>Owner</td><td>ownershipGranted</td></tr>
+<tr><td>Member</td><td>Owner</td><td>membershipRevoked + ownershipGranted</td></tr>
+</table><p>
+
+这些是当从属关系降级时触发的事件：
+</p>
+<table border="1">
+<tr><td><b>原关系</b></td><td><b>新关系</b></td><td><b>事件</b></td></tr>
+
+<tr><td>Owner</td><td>Admin</td><td>ownershipRevoked + adminGranted</td></tr>
+<tr><td>Admin</td><td>Member</td><td>adminRevoked + membershipGranted</td></tr>
+<tr><td>Member</td><td>None</td><td>membershipRevoked</td></tr>
+
+<tr><td>Owner</td><td>Member</td><td>ownershipRevoked + membershipGranted</td></tr>
+<tr><td>Owner</td><td>None</td><td>ownershipRevoked</td></tr>
+<tr><td>Admin</td><td>None</td><td>adminRevoked</td></tr>
+<tr><td><i>Anyone</i></td><td>Outcast</td><td>banned</td></tr>
+</table></p>
+
+<b>范例</b><p>
+
+在这个例子中我们可以看到如何批准用户管理员特权并且监听通知事件：<br>
+<blockquote>
+<pre>      <font color="#3f7f5f">// 用户1创建聊天室</font>
+      muc = new MultiUserChat(conn1, <font color="#0000FF">"myroom@conference.jabber.org"</font>);
+      muc.create(<font color="#0000FF">"testbot"</font>);
+
+      <font color="#3f7f5f">// 用户1(聊天室Owner)配置聊天室为moderated聊天室</font>
+      Form form = muc.getConfigurationForm();
+      Form answerForm = form.createAnswerForm();
+      answerForm.setAnswer(<font color="#0000FF">"muc#roomconfig_moderatedroom"</font>, <font color="#0000FF">"1"</font>);
+      muc.sendConfigurationForm(answerForm);
+
+      <font color="#3f7f5f">// 用户2加入新聊天室（作为游客）</font>
+      MultiUserChat muc2 = new MultiUserChat(conn2, <font color="#0000FF">"myroom@conference.jabber.org"</font>);
+      muc2.join(<font color="#0000FF">"testbot2"</font>);
+      <font color="#3f7f5f">// 用户2会监听自己的管理员特权</font>
+      muc2.addUserStatusListener(new DefaultUserStatusListener() {
+          public void membershipRevoked() {
+              super.membershipRevoked();
+              ...
+          }
+          public void adminGranted() {
+              super.adminGranted();
+              ...
+          }
+      });
+
+      <font color="#3f7f5f">// 用户3加入新聊天室（作为游客）</font>
+      MultiUserChat muc3 = new MultiUserChat(conn3, <font color="#0000FF">"myroom@conference.jabber.org"</font>);
+      muc3.join(<font color="#0000FF">"testbot3"</font>);
+      <font color="#3f7f5f">// 用户3会监听其它用户管理员特权</font>
+      muc3.addParticipantStatusListener(new DefaultParticipantStatusListener() {
+          public void membershipRevoked(String participant) {
+              super.membershipRevoked(participant);
+              ...
+          }
+          public void adminGranted(String participant) {
+              super.adminGranted(participant);
+              ...
+          }
+      });
+
+      <font color="#3f7f5f">// 房主(Owner)批准用户2管理员特权</font>
+      muc.grantAdmin(<font color="#0000FF">"user2@jabber.org"</font>);
+</pre>
+</blockquote>
+</body>
+
+</html>

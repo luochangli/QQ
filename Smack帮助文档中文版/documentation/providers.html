@@ -1,0 +1,88 @@
+<html>
+<head>
+	<title>Smack: 提供者体系结构 - Jive Software</title>
+	<link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+
+<body>
+
+<div class="header">
+    提供者体系结构 : Packet扩充和自定义IQ
+</div>
+
+<div class="nav">
+&laquo; <a href="index.html">目录列表</a></div>
+
+<p>
+
+Smack提供者体系是一个插入packet extensions和IQ packets的定制XML解析的机制。 标准  <a href="extensions/index.html">Smack扩展</a>使用提供者体系构造.两类提供者:
+<ul>
+      <li><tt>IQProvider</tt> --解析IQ请求为Java对象。<li><tt>PacketExtension</tt> -- 解析附于packe中的XML子文档为PacketExtension实像。
+</ul>
+
+<p class="subheader">
+    IQ提供者</p>
+
+默认情况下， Smack仅知道怎样处理含有子packet的IQ packet，这些子packet存在像如下所示的命名空间中：
+<ul>
+      <li>jabber:iq:auth
+      <li>jabber:iq:roster
+      <li>jabber:iq:register</ul>
+
+因为更多的IQ类型是XMPP和基扩充的一部分，提供了一个可插入式的IQ解析机制。IQ提供者IQ可逐步注册或通过在JAR文件中的META-INF文件夹创建一个smack.providers文件。
+这个文件是一个包含一个或多个iqProvider登陆的XML文档，如下例所示：
+
+<pre> &lt;?xml version="1.0"?&gt;
+ &lt;smackProviders&gt;
+     &lt;iqProvider&gt;
+         &lt;elementName&gt;query&lt;/elementName&gt;
+         &lt;namespace&gt;jabber:iq:time&lt;/namespace&gt;
+         &lt;className&gt;org.jivesoftware.smack.packet.Time&lt/className&gt;
+     &lt;/iqProvider&gt;
+ &lt;/smackProviders&gt;</pre>
+
+每个IQ提供者和一个元素和一个命名空间关联。在上例中，元素名是<tt>query</tt>命名空间是
+<tt>abber:iq:time</tt>。如果多个提供者登陆试图注册处理同样的命名空间，那么从classpath中第一个被加载的登陆将获得优先权。<p>
+
+IQ提供者类可以实现IQProvider接口，或继承IQ类。在前面的例子中，每个IQProvider负责解析未加工的XML流来生成一个IQ实例。在接下来的例子中，bean introspection将会使用IQ packet XML中的值自动设置IQ实例的属性。例如，类似下例的一个XMPP时间packet：
+
+<pre>&lt;iq type='result' to='joe@example.com' from='mary@example.com' id='time_1'&gt;
+    &lt;query xmlns='jabber:iq:time'&gt;
+        &lt;utc&gt;20020910T17:58:35&lt;/utc&gt;
+        &lt;tz&gt;MDT&lt;/tz&gt;
+        &lt;display&gt;Tue Sep 10 12:58:35 2002&lt;/display&gt;
+    &lt;/query&gt;
+&lt;/iq&gt;</pre>
+
+为了这个packet能够自动地映射到上面提供者文档中列出的的Time对象，它必须有setUtc(String)，setTz(String)，setDisplay(String)方法。
+introspection 服务会根据IQ实例的期望自动地XML中的String类型的值转换为boolean, int, long, float, double,或者Class。<p>
+
+<p class="subheader">
+    Packet扩展提供者</p>
+
+Packet扩展提供者为packet扩展提供一个可插入式的系统，它是IQ，message,presence packet的自定义命名空间的子元素。
+每个扩展提供者在smack.providers文件中注册为一个元素名称和命名空间，如下例所示：
+<pre>&lt;?xml version="1.0"?&gt;
+&lt;smackProviders&gt;
+    &lt;extensionProvider&gt;
+        &lt;elementName&gt;x&lt;/elementName&gt;
+        &lt;namespace&gt;jabber:iq:event&lt;/namespace&gt;
+        &lt;className&gt;org.jivesoftware.smack.packet.MessageEvent&lt/className&gt;
+    &lt;/extensionProvider&gt;
+&lt;/smackProviders&gt;</pre>
+
+如果多个提供者登陆试图注册处理相同的元素名称和命名空间，从类路径中加载的第一个登陆将会取得优先权。<p>
+
+无论何时packet extension出现在packet中,解析会被传递给正确的提供者。每个提供者既可以实现PacketExtensionProvider接口也可以作为一个标准的Java Bean.在前面的例子中，每个extension provider负责解析未加工的XML流来构造对象。在后面的例子中，bean introspection 被用来自动地用packet extension子元素的值设置类的属性。<p>
+
+当extension provider没有被注册为元素名称和命名空间结合时，Smack将会存储DefaultPacketExtension对象中子packet的所有顶级元素，并把它附加到packet上。
+      
+
+<br clear="all" /><br><br>
+
+<div class="footer">
+Copyright &copy; Jive Software 2002-2004
+</div>
+
+</body>
+</html>

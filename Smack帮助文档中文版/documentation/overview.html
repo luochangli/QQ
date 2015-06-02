@@ -1,0 +1,55 @@
+<html>
+<head>
+	<title>Smack: 概述 - Jive Software</title>
+	<link rel="stylesheet" type="text/css" href="style.css" />
+</head>
+
+<body>
+
+<div class="header">
+Smack 概述
+</div>
+
+<div class="nav">
+&laquo; <a href="index.html">目录列表</a>
+</div>
+
+<p>
+
+Smack是一个用于和XMPP服务器通信的类库，由此可以实现即时通讯和聊天。
+<p>
+
+<p class="subheader">
+Smack主要优势
+</p>
+
+<ul>
+	<li>非常简单易用,并且有十分强大的 API。只需三行代码就可以向用户发关文本消息：
+	  <div class="code"><pre>
+XMPPConnection connection = <font color="navy"><b>new</b></font> XMPPConnection(<font color="green">"jabber.org"</font>);
+connection.login(<font color="green">"mtucker"</font>, <font color="green">"password"</font>);
+connection.createChat(<font color="green">"jsmith@jivesoftware.com"</font>).sendMessage(<font color="green">"Howdy!"</font>);
+</pre></div>
+  <li>不像其它类库那样强制您进行包级别的编码。Smack提供智能的更高级的构造，像 <tt>Chat</tt>和<tt>GroupChat</tt>类，让您进行高效的编程。
+  <li>不需用您熟悉XMPP XML格式,即使您熟悉 XML.
+  <li>提供简单的设计以进行通讯，Smack允许您在每个消息中设置任意数量的属性，包括java对象。<li> Apache许可下的开源类库，这意味着您可以将Smack整合进您的商业或非商业的应用中。
+</ul>
+
+<p class="subheader">
+关于 XMPP
+</p>
+
+XMPP (eXtensible Messaging and Presence Protocol)是一个由Jabber Software Foundation (<a href="http://www.jabber.org">http://www.jabber.org</a>)领导的开放的基于XML的协议，并且获得了 IETF的批准。
+ 
+<p class="subheader">怎样使用该文档</p>
+
+在使用该文档时假设您已经了解XMPP即时通讯的主要特征。在您阅读该文档的同时强烈建议您打开 Javadoc API 帮助文档作为参考。
+ 
+<br clear="all" />
+<br><br>
+<div class="footer">
+Copyright &copy; Jive Software 2002-2005
+</div>
+
+</body>
+</html>
