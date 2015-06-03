@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
+import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.PacketCollector;
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
@@ -19,6 +20,7 @@ import org.jivesoftware.smack.filter.PacketFilter;
 import org.jivesoftware.smack.filter.PacketIDFilter;
 import org.jivesoftware.smack.filter.PacketTypeFilter;
 import org.jivesoftware.smack.packet.IQ;
+import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.Registration;
@@ -28,13 +30,14 @@ import org.jivesoftware.smackx.ReportedData;
 import org.jivesoftware.smackx.ReportedData.Row;
 import org.jivesoftware.smackx.search.UserSearchManager;
 
-import com.qq.R;
-import com.qq.bean.Session;
-
 import android.content.Context;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.qq.R;
+import com.qq.bean.Session;
+import com.qq.listener.IReceiveChatMsg;
 
 public class XmppUtil {
 	
@@ -340,7 +343,12 @@ public class XmppUtil {
         connection.sendPacket(presence);      
     }  
     
+
+    private static IReceiveChatMsg callbackChatMsg;
     
+    public static  void setCallbackChatMsg(IReceiveChatMsg callback){
+    	callbackChatMsg = callback;
+    }
     /**
 	 * 发送消息
 	 * @param position
@@ -353,7 +361,15 @@ public class XmppUtil {
 			throw new XMPPException();
 		}
 		ChatManager chatmanager = mXMPPConnection.getChatManager();
-		Chat chat =chatmanager.createChat(touser + "@" + Const.XMPP_HOST, null);
+		Chat chat =chatmanager.createChat(touser + "@" + Const.XMPP_DOMAIN, null);
+	     MessageListener msgListener = new MessageListener() {
+			@Override
+			public void processMessage(Chat arg0, Message message) {
+				callbackChatMsg.updateChatRoom(message);
+			}
+		};
+		
+		 chat = chatmanager.createChat(touser + "@" + Const.XMPP_DOMAIN, msgListener);
 		if (chat != null) {
 			chat.sendMessage(content);
 			Log.e("jj", "发送成功");

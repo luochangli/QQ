@@ -2,7 +2,8 @@ package com.qq.util;
 
 public class Const {
 	
-	public static final String XMPP_HOST = "192.168.8.229";
+	public static final String XMPP_HOST = "192.168.2.135";
+	public static final String XMPP_DOMAIN = "luo-pc";
 	public static final int XMPP_PORT = 5222;
 	
 	/**
